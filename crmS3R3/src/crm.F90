@@ -94,7 +94,7 @@ module testprobcrm
       procedure   :: GL(INTEGRATOR)_Ct             => myCt
       procedure   :: GL(INTEGRATOR)_Kt             => myKt
       procedure   :: GL(INTEGRATOR)_Kt_lambda      => myKtl
-#if defined(INT_RATTLie) || defined(INT_SHAKELie) || defined(INT_varint4lie)
+#if defined(INT_RATTLie) || defined(INT_SHAKELie) || defined(INT_varint4lie) || defined(INT_half_explicit)
       procedure   :: GL(INTEGRATOR)_Tg_inv_T       => my_Tg_inv_T
       procedure   :: GL(INTEGRATOR)_d_Tg_inv_T     => my_d_Tg_inv_T
 #endif

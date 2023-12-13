@@ -7,12 +7,14 @@ ifndef INTEGRATOR
 #INTEGRATORP = ../BLieDF
 #INTEGRATOR = gena
 #INTEGRATORP = ../gena
-INTEGRATOR = RATTLie
-INTEGRATORP = ../RATTLie
+# INTEGRATOR = RATTLie
+# INTEGRATORP = ../RATTLie
 #INTEGRATOR = varint4lie
 #INTEGRATORP = ../varint4lie
 #INTEGRATOR = SHAKELie
 #INTEGRATORP = ../SHAKELie
+INTEGRATOR = half_explicit
+INTEGRATORP = ../half_explicit
 endif
 
 # Set path of the implementation of the aotus library

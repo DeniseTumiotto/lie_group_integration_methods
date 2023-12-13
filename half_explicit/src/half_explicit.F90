@@ -6,7 +6,7 @@ module half_explicit
    ! definition of integrator options
    type  :: half_explicit_options
       ! system is constrained?
-      logical :: constrained = .false.
+      integer :: constrained = 0
       ! use stabilized index two formulation
       integer :: stab2 = 0
       ! mass matrix is constant?
@@ -41,6 +41,7 @@ module half_explicit
       real(8) :: t0 = 0.0_8
       real(8) :: te = 1.0_8
       logical :: step_size_control = .false.
+      logical :: local_error_control = .false.
       integer :: nsteps = 100
       real(8) :: facmax = 5.0_8
       real(8) :: facmin = 0.3_8
@@ -69,6 +70,7 @@ module half_explicit
       ! variables that define the state of the integrator
       real(8)                             :: t = 0.0_8
       real(8)                             :: err = 0.0_8
+      real(8), dimension(:), allocatable  :: local_est_err
       integer                             :: sizeq = 0
       real(8), dimension(:), allocatable  :: q
       integer                             :: sizev = 0
@@ -91,7 +93,8 @@ module half_explicit
       real(8), dimension(:), allocatable     :: half_explicit_d
       real(8), dimension(:), allocatable     :: half_explicit_variable_step_coeff
       integer                                :: half_explicit_s
-      integer                                :: half_explicit_sizeA
+      integer                                :: half_explicit_s_bar
+      ! integer                                :: half_explicit_sizeA
       integer                                :: half_explicit_order
       integer                                :: half_explicit_order_variable_step
    contains
@@ -408,36 +411,39 @@ module half_explicit
       ! intenal real variables
       real(8)                                     :: h    ! step size
       real(8), dimension(this%sizev+this%sizel)   :: dVl
-      real(8), dimension(this%sizev+this%sizel)   :: dVl_variable_step
+      ! real(8), dimension(this%sizev+this%sizel)   :: dVl_variable_step
       real(8), dimension(this%sizev)              :: Vcrr
-      real(8), dimension(this%half_explicit_sizeA,   this%sizeq) :: Qn
-      real(8), dimension(                            this%sizeq) :: Qn_variable_step
-      real(8), dimension(this%half_explicit_sizeA,   this%sizev) :: Vn
-      real(8), dimension(                            this%sizev) :: Vn_variable_step
-      real(8), dimension(this%half_explicit_sizeA,   this%sizev) :: Thetan
-      real(8), dimension(this%half_explicit_sizeA-1, this%sizev) :: dThetan
-      real(8), dimension(                            this%sizev) :: Thetan_variable_step
-      real(8), dimension(this%half_explicit_sizeA-1, this%sizev) :: dVn
-      real(8), dimension(                            this%sizev) :: dVn_variable_step
-      real(8), dimension(this%half_explicit_sizeA-1, this%sizel) :: Lambdan
-      real(8), dimension(                            this%sizel) :: Lambdan_variable_step
+      real(8), dimension(this%half_explicit_s_bar+1,   this%sizeq) :: Qn
+      ! real(8), dimension(                            this%sizeq) :: Qn_variable_step
+      real(8), dimension(this%half_explicit_s_bar+1,   this%sizev) :: Vn
+      ! real(8), dimension(                            this%sizev) :: Vn_variable_step
+      real(8), dimension(this%half_explicit_s_bar+1,   this%sizev) :: Thetan
+      real(8), dimension(this%half_explicit_s_bar, this%sizev) :: dThetan
+      ! real(8), dimension(                            this%sizev) :: Thetan_variable_step
+      real(8), dimension(this%half_explicit_s_bar, this%sizev) :: dVn
+      ! real(8), dimension(                            this%sizev) :: dVn_variable_step
+      real(8), dimension(this%half_explicit_s_bar, this%sizel) :: Lambdan
+      ! real(8), dimension(                            this%sizel) :: Lambdan_variable_step
       real(8), dimension(this%sizev,  this%sizev) :: M
       real(8), dimension(this%sizel,  this%sizev) :: B0
       real(8), dimension(this%sizel,  this%sizev) :: B1
-      real(8), dimension(this%sizel,  this%sizev) :: B1_variable_step
+      ! real(8), dimension(this%sizel,  this%sizev) :: B1_variable_step
       real(8), dimension(this%sizev+this%sizel, this%sizev+this%sizel) :: MBB0
-      real(8), dimension(this%sizev+this%sizel, this%sizev+this%sizel) :: MBB0_variable_step
+      ! real(8), dimension(this%sizev+this%sizel, this%sizev+this%sizel) :: MBB0_variable_step
 
       ! calculation of step size $h$
       h = t1 - this%t
 
       ! first stage
+      print *, "fist stage"
       Thetan(1,1:this%sizev) = 0.0_8
-      Qn(1,1:this%sizeq) = this%half_explicit_qlpexphDqtilde(this%q, 1.0_8, Thetan(1,:))
+      Qn(1,1:this%sizeq) = this%q
+      ! Qn(1,1:this%sizeq) = this%half_explicit_qlpexphDqtilde(this%q, 1.0_8, Thetan(1,:))
       Vn(1,1:this%sizev) = this%v
       dThetan(1,:) = matmul(transpose(this%half_explicit_Tg_inv_T(Thetan(1,:))), Vn(1,:))
       Lambdan(1,:) = this%l
       ! calculate $\dotV_{m1}$ --> dVn(1,:)
+      ! 1. MASS MATRIX
       if (this%opts%diag_mass_matrix == 1) then
          ! Set the mass matrix part to zero beforehand
          M = 0.0_8
@@ -457,13 +463,14 @@ module half_explicit
             M(:,:) = this%half_explicit_M(Qn(1,:))
          end if
       end if
-
       ! we need to solve a linear equation, first calulate the rhs
+      ! 2. RIGHT HAND SIDE
       dVn(1,:) = -(this%half_explicit_g(Qn(1,:), this%v, this%t + this%half_explicit_c(1)*h)+matmul(transpose(this%half_explicit_B(Qn(1,:))),this%l))
       ! count calls
       this%half_explicit_stats%ngcalls = this%half_explicit_stats%ngcalls + 1
       this%half_explicit_stats%nBcalls = this%half_explicit_stats%nBcalls + 1
-      ! then solve the system
+      ! 3. SOLVE THE SYSTEM
+      print *, "fist stage - linear system"
       call dgesv(         &! solve the System A*X=B and save the result in B
                   this%sizev,      &! number of linear equations (=size(A,1))      ! Vorsicht: double precision muss real(8) sein, sonst gibt es Probleme
                   1,       &! number of right hand sides (=size(B,2))
@@ -476,138 +483,124 @@ module half_explicit
       ! Now dVn(1,:) actually contains $\dot v(t_0)$
       if (info .ne. 0)  print*, "TimeStep--fist step: dgesv sagt info=", info ! TODO
 
-      ! second stage
+      ! second stage (only Theta_2 and Q_2)
+      print *, "second stage - Theta and Q"
       Thetan(2,:) = h * this%half_explicit_A(2,1) * dThetan(1,:)
       Qn(2,:) = this%half_explicit_qlpexphDqtilde(this%q, 1.0_8, Thetan(2,:))
-      Vn(2,:) = this%v + h * this%half_explicit_A(2,1) * dVn(1,:)
+      ! Vn(2,:) = this%v + h * this%half_explicit_A(2,1) * dVn(1,:)
 
       ! following stages
-      do i=3,this%half_explicit_sizeA
-         dThetan(i-1,:) = matmul(transpose(this%half_explicit_Tg_inv_T(Thetan(i-1,:))), Vn(i-1,:))
-         Thetan(i,:) = 0.0_8
-         if ((this%opts%step_size_control) .and. (i == this%half_explicit_sizeA)) then
-         Thetan_variable_step = 0.0_8
-         end if
-         do j=1,i-1
-            Thetan(i,:)=Thetan(i,:) + h * this%half_explicit_A(i,j) * dThetan(j,:)
-            if ((this%opts%step_size_control) .and. (i == this%half_explicit_sizeA)) then
-               Thetan_variable_step=Thetan_variable_step + h * this%half_explicit_variable_step_coeff(j) * dThetan(j,:)
-            end if
-         end do
-         Qn(i,:) = this%half_explicit_qlpexphDqtilde(this%q, 1.0_8, Thetan(i,:))
-         if ((this%opts%step_size_control) .and. (i == this%half_explicit_sizeA)) then
-            Qn_variable_step = this%half_explicit_qlpexphDqtilde(this%q, 1.0_8, Thetan_variable_step)
-         end if
-         ! calculate $\dotV_{m,i-1}$ and $\Lambda_{m,i-1}$ --> dVn(i-1,:), Lambdan(i-1,:)
-         MBB0 = 0.0_8
-         if (this%opts%diag_mass_matrix == 1) then
-            if (this%opts%const_mass_matrix == 1) then
-               MBB0(1:this%sizev,1) = this%half_explicit_const_diag_M
-            else
-               MBB0(1:this%sizev,1) = this%half_explicit_diag_M(Qn(i-1,:))
-            end if
-            do concurrent (i=2:this%sizev)
-               MBB0(i,i) = MBB0(i,1)
-               MBB0(i,1) = 0.0_8
-            end do
-         else
-            if (this%opts%const_mass_matrix == 1) then
-               MBB0(1:this%sizev,1:this%sizev) = this%half_explicit_const_M
-            else
-               MBB0(1:this%sizev,1:this%sizev) = this%half_explicit_M(Qn(i-1,:))
-            end if
-         end if
-         ! calulate $B(Qn(i-1))$ and $B(Qn(i))$
-         B0 = this%half_explicit_B(Qn(i-1,:))
-         B1 = this%half_explicit_B(Qn(i,:))
-         MBB0(1:this%sizev, this%sizev+1:this%sizev+this%sizel) = transpose(B0)
-         MBB0(this%sizev+1:this%sizev+this%sizel, 1:this%sizev) = h * this%half_explicit_A(i,i-1) * B1
-         if ((this%opts%step_size_control) .and. (i == this%half_explicit_sizeA)) then
-            MBB0_variable_step = MBB0
-            B1_variable_step = this%half_explicit_B(Qn_variable_step)
-            MBB0_variable_step(this%sizev+1:this%sizev+this%sizel, 1:this%sizev) = h * this%half_explicit_variable_step_coeff(i-1) * B1_variable_step
-            ! count calls
-            this%half_explicit_stats%nBcalls = this%half_explicit_stats%nBcalls + 1
-         end if
-         ! count calls
-         this%half_explicit_stats%nBcalls = this%half_explicit_stats%nBcalls + 2
-
-         ! we need to solve a linear equation, first calulate the rhs
-         Vcrr = this%v
-         do j = 1,i-2
-            Vcrr = Vcrr + h * this%half_explicit_A(i,j) * dVn(j,:)
-         end do
-         dVl(1:this%sizev) = -this%half_explicit_g(Qn(i-1,:), Vn(i-1,:), this%t + h * this%half_explicit_c(i-1))
-         dVl(this%sizev+1:this%sizev+this%sizel) = -matmul(B1, Vcrr)
-         if ((this%opts%step_size_control) .and. (i == this%half_explicit_sizeA)) then
-            Vcrr = this%v
-            do j = 1,i-2
-               Vcrr = Vcrr + h * this%half_explicit_variable_step_coeff(j) * dVn(j,:)
-            end do
-            dVl_variable_step(1:this%sizev) = dVl(1:this%sizev)
-            dVl_variable_step(this%sizev+1:this%sizev+this%sizel) = -matmul(B1_variable_step, Vcrr)
-         end if
-         ! count calls
-         this%half_explicit_stats%ngcalls = this%half_explicit_stats%ngcalls + 1
-         ! then solve the system
-         call dgesv(          &! solve the System A*X=B and save the result in B
-                     this%sizev+this%sizel,   &! number of linear equations (=size(A,1))      ! Vorsicht: double precision muss real(8) sein, sonst gibt es Probleme
-                     1,       &! number of right hand sides (=size(B,2))
-                     MBB0,    &! matrix A
-                     this%sizev+this%sizel,   &! leading dimension of A, in this case is equal to the number of linear equations (=size(A,1))
-                     ipiv,    &! integer pivot vector; it is not needed
-                     dVl,     &! matrix B
-                     this%sizev+this%sizel,   &! leading dimension of B,  in this case is equal to the number of linear equations (=size(B,1)=size(A,1))
-                     info)     ! integer information flag
-         ! if (info .ne. 0)  print*, "TimeStep--following steps: dgesv sagt info=", info ! TODO
-         dVn(i-1,:)     = dVl(1:this%sizev)
-         Lambdan(i-1,:) = dVl(this%sizev+1:this%sizev+this%sizel)
+      do i=2,this%half_explicit_s_bar + 1
+         print *, "stage ", i
+         ! evaluate V_i
          Vn(i,:) = this%v
          do j = 1,i-1
             Vn(i,:) = Vn(i,:) + h * this%half_explicit_A(i,j) * dVn(j,:)
          end do
-         if ((this%opts%step_size_control) .and. (i == this%half_explicit_sizeA)) then
-            ! then solve the system
-            call dgesv(          &! solve the System A*X=B and save the result in B
-                        this%sizev+this%sizel,   &! number of linear equations (=size(A,1))      ! Vorsicht: double precision muss real(8) sein, sonst gibt es Probleme
-                        1,       &! number of right hand sides (=size(B,2))
-                        MBB0_variable_step,    &! matrix A
-                        this%sizev+this%sizel,   &! leading dimension of A, in this case is equal to the number of linear equations (=size(A,1))
-                        ipiv,    &! integer pivot vector; it is not needed
-                        dVl_variable_step,     &! matrix B
-                        this%sizev+this%sizel,   &! leading dimension of B,  in this case is equal to the number of linear equations (=size(B,1)=size(A,1))
-                        info)     ! integer information flag
-            ! if (info .ne. 0)  print*, "TimeStep--following steps: dgesv sagt info=", info ! TODO
-            dVn_variable_step     = dVl(1:this%sizev)
-            Lambdan_variable_step = dVl(this%sizev+1:this%sizev+this%sizel)
-            Vn_variable_step = this%v + h * this%half_explicit_variable_step_coeff(i-1) * dVn_variable_step
-            do j = 1,i-2
-               Vn_variable_step = Vn_variable_step + h * this%half_explicit_variable_step_coeff(j) * dVn(j,:)
-            end do
 
-            this%err = 0.0_8
-            ! evaluate local error
-            do j = 1,this%sizeq+this%sizev+this%sizel
-               if (j < this%sizeq + 1) then
-                  this%err = this%err + ((Qn(i-1,j)-Qn_variable_step(j))/(this%opts%atol + max(abs(Qn(i-1,j)),abs(Qn(1,j))) * this%opts%rtol))**2
-               elseif (j < this%sizeq + this%sizev + 1) then
-                  this%err = this%err + ((Vn(i-1,j-this%sizeq)-Vn_variable_step(j-this%sizeq))/(this%opts%atol + max(abs(Vn(i-1,j-this%sizeq)),abs(Vn(1,j-this%sizeq))) * this%opts%rtol))**2
-               else
-                  ! this%err = this%err + ((Lambdan(i-1,j-this%sizeq-this%sizev)-Lambdan_variable_step(j-this%sizeq-this%sizev))/(this%opts%atol + max(abs(Lambdan(i-1,j-this%sizeq-this%sizev)),abs(Lambdan(1,j-this%sizeq-this%sizev))) * this%opts%rtol))**2
-               end if
+         if ( i < this%half_explicit_s_bar + 1 ) then
+            ! evaluate dTheta_i
+            dThetan(i,:) = matmul(transpose(this%half_explicit_Tg_inv_T(Thetan(i,:))), Vn(i,:))
+
+            ! evaluate Theta_{i+1} and Q_{i+1}
+            Thetan(i+1,:) = 0.0_8
+            do j=1,i
+               Thetan(i+1,:)=Thetan(i+1,:) + h * this%half_explicit_A(i+1,j) * dThetan(j,:)
             end do
-            ! this%err = sqrt(this%err / (this%sizeq + this%sizev + this%sizel))
-            this%err = sqrt(this%err / (this%sizeq + this%sizev))
-            ! this%err = sqrt(this%err / (this%sizev))
+            Qn(i+1,:) = this%half_explicit_qlpexphDqtilde(this%q, 1.0_8, Thetan(i+1,:))
+
+            ! calculate $\dotV_{m,i}$ and $\Lambda_{m,i}$ --> dVn(i,:), Lambdan(i,:)
+            ! 1. MATRIX OF COEFFICIENTS
+            MBB0 = 0.0_8
+            if (this%opts%diag_mass_matrix == 1) then
+               if (this%opts%const_mass_matrix == 1) then
+                  MBB0(1:this%sizev,1) = this%half_explicit_const_diag_M
+               else
+                  MBB0(1:this%sizev,1) = this%half_explicit_diag_M(Qn(i,:))
+               end if
+               do concurrent (i=2:this%sizev)
+                  MBB0(i,i) = MBB0(i,1)
+                  MBB0(i,1) = 0.0_8
+               end do
+            else
+               if (this%opts%const_mass_matrix == 1) then
+                  MBB0(1:this%sizev,1:this%sizev) = this%half_explicit_const_M
+               else
+                  MBB0(1:this%sizev,1:this%sizev) = this%half_explicit_M(Qn(i,:))
+               end if
+            end if
+            ! calulate $B(Qn(i))$ and $B(Qn(i+1))$
+            B0 = this%half_explicit_B(Qn(i,:))
+            B1 = this%half_explicit_B(Qn(i+1,:))
+            MBB0(1:this%sizev, this%sizev+1:this%sizev+this%sizel) = transpose(B0)
+            MBB0(this%sizev+1:this%sizev+this%sizel, 1:this%sizev) = h * this%half_explicit_A(i+1,i) * B1
+            ! count calls
+            this%half_explicit_stats%nBcalls = this%half_explicit_stats%nBcalls + 2
+            ! we need to solve a linear equation, first calulate the rhs
+            ! 2. RIGHT HAND SIDE
+            ! V_{i+1} without the last value of dV_i, which we are going to evaluate NOW
+            Vcrr = this%v
+            do j = 1,i-1
+               Vcrr = Vcrr + h * this%half_explicit_A(i+1,j) * dVn(j,:)
+            end do
+            dVl(1:this%sizev) = -this%half_explicit_g(Qn(i,:), Vn(i,:), this%t + h * this%half_explicit_c(i))
+            dVl(this%sizev+1:this%sizev+this%sizel) = -matmul(B1, Vcrr)
+            ! count calls
+            this%half_explicit_stats%ngcalls = this%half_explicit_stats%ngcalls + 1
+            ! then solve the system
+            print *, "stage ", i, " - linear system"
+            call dgesv(                       &! solve the System A*X=B and save the result in B
+                       this%sizev+this%sizel, &! number of linear equations (=size(A,1))      ! Vorsicht: double precision muss real(8) sein, sonst gibt es Probleme
+                       1,                     &! number of right hand sides (=size(B,2))
+                       MBB0,                  &! matrix A
+                       this%sizev+this%sizel, &! leading dimension of A, in this case is equal to the number of linear equations (=size(A,1))
+                       ipiv,                  &! integer pivot vector; it is not needed
+                       dVl,                   &! matrix B
+                       this%sizev+this%sizel, &! leading dimension of B,  in this case is equal to the number of linear equations (=size(B,1)=size(A,1))
+                       info)                   ! integer information flag
+                     ! if (info .ne. 0)  print*, "TimeStep--following steps: dgesv sagt info=", info ! TODO
+            dVn(i,:)     = dVl(1:this%sizev)
+            Lambdan(i,:) = dVl(this%sizev+1:this%sizev+this%sizel)
          end if
+
+         ! if ( (this%opts%local_error_control) .and. (i == this%half_explicit_s_bar + 1) ) then
+         !    ! evaluate Theta_error_control and Q_error_control
+         !    Thetan_variable_step = 0.0_8
+         !    do j=1,i-1
+         !       Thetan_variable_step = Thetan_variable_step + h * this%half_explicit_variable_step_coeff(j) * dThetan(j,:)
+         !    end do
+         !    Qn_variable_step = this%half_explicit_qlpexphDqtilde(this%q, 1.0_8, Thetan_variable_step)
+         !    Vn_variable_step = this%v
+         !    do j = 1,i-1
+         !       Vn_variable_step = Vn_variable_step + h * this%half_explicit_variable_step_coeff(j) * dVn(j,:)
+         !    end do
+
+         !    if (allocated(this%local_est_err)) deallocate(this%local_est_err)
+         !    allocate(this%local_est_err(this%sizeq + this%sizev))
+         !    this%local_est_err(1:this%sizeq) = abs(Qn(this%half_explicit_s+1,:) - Qn_variable_step)
+         !    this%local_est_err(this%sizeq+1:this%sizeq+this%sizev) = abs(Vn(this%half_explicit_s+1,:) - Vn_variable_step)
+
+         !    this%err = 0.0_8
+         !    ! evaluate local error
+         !    do j = 1,this%sizeq+this%sizev
+         !       if (j < this%sizeq + 1) then
+         !          this%err = this%err + ((Qn(this%half_explicit_s+1,j)-Qn_variable_step(j))/(this%opts%atol + max(abs(Qn(this%half_explicit_s+1,j)),abs(Qn(1,j))) * this%opts%rtol))**2
+         !       else
+         !          this%err = this%err + ((Vn(this%half_explicit_s+1,j-this%sizeq)-Vn_variable_step(j-this%sizeq))/(this%opts%atol + max(abs(Vn(this%half_explicit_s+1,j-this%sizeq)),abs(Vn(1,j-this%sizeq))) * this%opts%rtol))**2
+         !       end if
+         !    end do
+         !    this%err = sqrt(this%err / (this%sizeq + this%sizev))
+         ! end if
       end do
+      print *, "saving solutions"
       this%q = Qn(this%half_explicit_s+1,:)
       this%v = Vn(this%half_explicit_s+1,:)
       this%l = 0.0_8
-      do i = 1, this%half_explicit_s+1
+      do i = 1, this%half_explicit_s_bar
          this%l = this%l + this%half_explicit_d(i) * Lambdan(i,:)
       end do
       this%t = t1
+      print *, "exit"
    end subroutine half_explicit_solveConstrainedTimeStep
 
    ! subroutine for integrating one time step
@@ -624,13 +617,13 @@ module half_explicit
 
       ! intenal real variables
       real(8)                           :: h       ! step size
-      real(8), dimension(this%half_explicit_sizeA, this%sizeq) :: Qn
-      real(8), dimension(this%half_explicit_sizeA, this%sizev) :: Vn
+      real(8), dimension(this%half_explicit_s_bar+1, this%sizeq) :: Qn
+      real(8), dimension(this%half_explicit_s_bar+1, this%sizev) :: Vn
       real(8), dimension(                          this%sizeq) :: Qn_variable_step
       real(8), dimension(                          this%sizev) :: Vn_variable_step
-      real(8), dimension(this%half_explicit_sizeA, this%sizev) :: Thetan
-      real(8), dimension(this%half_explicit_sizeA, this%sizev) :: dThetan
-      real(8), dimension(this%half_explicit_sizeA, this%sizev) :: dVn
+      real(8), dimension(this%half_explicit_s_bar+1, this%sizev) :: Thetan
+      real(8), dimension(this%half_explicit_s_bar+1, this%sizev) :: dThetan
+      real(8), dimension(this%half_explicit_s_bar+1, this%sizev) :: dVn
       real(8), dimension(                          this%sizev) :: Thetan_variable_step
       real(8), dimension(this%sizev,  this%sizev) :: M
 
@@ -677,23 +670,23 @@ module half_explicit
       end if
 
       ! following stages
-      do i=2,this%half_explicit_sizeA
+      do i=2,this%half_explicit_s_bar+1
          Thetan(i,:) = 0.0_8
          Vn(i,:) = this%v
-         if ((this%opts%step_size_control) .and. (i == this%half_explicit_sizeA)) then
+         if ((this%opts%step_size_control) .and. (i == this%half_explicit_s_bar+1)) then
             Thetan_variable_step = 0.0_8
             Vn_variable_step = this%v
          end if
          do j=1,i-1
             Thetan(i,:)=Thetan(i,:) + h * this%half_explicit_A(i,j) * dThetan(j,:)
             Vn(i,:) = Vn(i,:) + h * this%half_explicit_A(i,j) * dVn(j,:)
-            if ((this%opts%step_size_control) .and. (i == this%half_explicit_sizeA)) then
+            if ((this%opts%step_size_control) .and. (i == this%half_explicit_s_bar+1)) then
                Thetan_variable_step=Thetan_variable_step + h * this%half_explicit_variable_step_coeff(j) * dThetan(j,:)
                Vn_variable_step = Vn_variable_step + h * this%half_explicit_variable_step_coeff(j) * dVn(j,:)
             end if
          end do
          Qn(i,:) = this%half_explicit_qlpexphDqtilde(this%q, 1.0_8, Thetan(i,:))
-         if ((this%opts%step_size_control) .and. (i == this%half_explicit_sizeA)) then
+         if ((this%opts%step_size_control) .and. (i == this%half_explicit_s_bar+1)) then
             Qn_variable_step = this%half_explicit_qlpexphDqtilde(this%q, 1.0_8, Thetan_variable_step)
 
             this%err = 0.0_8
@@ -766,6 +759,8 @@ module half_explicit
       real(8)                          :: t_old
       real(4)                          :: times(2), time ! for dtime
 
+      integer :: i = 0 ! counter
+
       ! problem initialization
       call this%half_explicit_init()
 
@@ -801,7 +796,7 @@ module half_explicit
       ! start stopwatch
       time = dtime(times)
 
-      if (.not.(this%opts%constrained)) then
+      if (this%opts%constrained == 0) then
 
          print *, 'This is an explicit Runge-Kutta method of order ', this%half_explicit_order
          
@@ -883,12 +878,14 @@ module half_explicit
             call this%half_explicit_solveTimeStep(t1)
          end do
       else
+         print *, "initial integration"
          ! calculate correct initial values
          call this%half_explicit_calcInitialConstrained()
          ! output for the first time
          call this%half_explicit_outputFunction(1)
 
          ! integration loop
+         i = 0
          do while (t1 <= this%opts%te .or. n <= this%opts%nsteps)
 
             ! Calculate the next time $t_{n+1}$
@@ -951,13 +948,15 @@ module half_explicit
             ! print *, 'err=', this%err
 
             ! DEBUG
-            print *, 't1=', t1
-            print *, 'hn=', h_new
-            if (n>1) then
-               print *, 'er=', this%err
-            endif
-
+            ! print *, 't1=', t1
+            ! print *, 'hn=', h_new
+            ! if (n>1) then
+            !    print *, 'er=', this%err
+            ! endif
+            print *, "starting time step ", i+1
             call this%half_explicit_solveConstrainedTimeStep(t1)
+            i = i + 1
+            print *, "time step ", i, " complete!"
          end do
       end if
       ! stop stopwatch
@@ -1021,7 +1020,7 @@ module half_explicit
       ! input/output
       class(half_explicit_problem), intent(inout)  :: this
       !
-      this%opts%constrained = .false.
+      this%opts%constrained = 0
       this%opts%const_mass_matrix = 0
       this%opts%diag_mass_matrix = 0
       this%opts%banded_iteration_matrix = 0

@@ -58,6 +58,18 @@ gamma   = 1/2 - (alpha_m - alpha_f)
 --Algorithmic parameters for BLieDF
 k_bdf = 2
 
+-- Algorithmic paramters for half-explicit Lie Runge-Kutta
+
+A = { 0.,  0.,
+      1.,  0.,
+     1/2, 1/2}
+c = {0., 1., 1.}
+d = {1/2, 1/2}
+order  = 2
+stages = 2
+stages_bar = 2
+local_error_control = false
+
 -- Use constant mass matrix
 const_mass_matrix = 1
 -- Use diagonal mass matrix
@@ -108,7 +120,7 @@ else
 end
 
 -- Use stabilized index-2 formulation (only applies to the constrained case)
-stab2 = 1
+stab2 = 0
 
 -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- --
 -- -- -- Problem options   -- -- -- -- -- -- -- -- -- -- -- --
