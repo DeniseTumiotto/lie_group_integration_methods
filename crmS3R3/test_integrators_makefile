@@ -1,0 +1,7 @@
+#!/bin/bash
+
+for INT in RATTLie gena BLieDF
+do
+	make clean cleanintegrator INTEGRATOR=$INT INTEGRATORP=../$INT
+	make test INTEGRATOR=$INT INTEGRATORP=../$INT
+done
