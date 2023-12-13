@@ -147,6 +147,24 @@ program main
       call error_check(conf, ivvError(i), 'd')
    end do
    print *, 'd = ', prob%GL(INTEGRATOR)_d
+
+   call aot_get_val(L = conf, key = 'local_error_control', val = prob%opts%local_error_control, ErrCode = iError)
+   call error_check(conf, iError, 'local_error_control')
+   print *, 'local_error_control = ', prob%opts%local_error_control
+
+   if (prob%opts%local_error_control) then
+      if (allocated(ivvError)) then
+         deallocate(ivvError)
+      end if
+      allocate(ivvError(prob%GL(INTEGRATOR)_s_bar))
+      allocate(prob%GL(INTEGRATOR)_variable_step_coeff(prob%GL(INTEGRATOR)_s_bar))
+
+      call aot_get_val(L = conf, key = 'b', val = prob%GL(INTEGRATOR)_variable_step_coeff, ErrCode = ivvError)
+      do i=1,prob%GL(INTEGRATOR)_s_bar
+         call error_check(conf, ivvError(i), 'b')
+      end do
+      print *, 'b = ', prob%GL(INTEGRATOR)_variable_step_coeff
+   end if
 #endif
 
    ! Integrator options

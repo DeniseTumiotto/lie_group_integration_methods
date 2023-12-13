@@ -60,15 +60,33 @@ k_bdf = 2
 
 -- Algorithmic paramters for half-explicit Lie Runge-Kutta
 
-A = { 0.,  0.,
-      1.,  0.,
-     1/2, 1/2}
-c = {0., 1., 1.}
-d = {1/2, 1/2}
-order  = 2
-stages = 2
-stages_bar = 2
-local_error_control = false
+-- A = { 0.,  0.,
+--       1.,  0.,
+--      1/2, 1/2}
+-- c = {0., 1., 1.}
+-- d = {1/2, 1/2}
+-- order  = 2
+-- stages = 2
+-- stages_bar = 2
+-- local_error_control = false
+
+-- Automatic step size control HEDOP5 (kirchhoff = 1 --> constrained)
+A = {   0.,          0.,         0.,         0.,          0.,    0., 0.,
+       1/5,          0.,         0.,         0.,          0.,    0., 0.,
+      3/40,        9/40,         0.,         0.,          0.,    0., 0.,
+     44/45,      -56/15,       32/9,         0.,          0.,    0., 0.,
+19372/6561, -25360/2187, 64448/6561,   -212/729,          0.,    0., 0.,
+ 9017/3168,     -355/33, 46732/5247,     49/176, -5103/18656,    0., 0.,
+    35/384,          0.,   500/1113,    125/192,  -2187/6784, 11/84, 0.,
+    -18611506045861/19738176307200, 59332529/14479296,   -2509441598627/893904224850,    2763523204159/3289696051200,  -41262869588913/116235927142400, 46310205821/287848404480, -3280/75413}
+c = {0., 1/5, 3/10, 4/5, 8/9, 1., 1., 19/20}
+b = {5179/57600, 0., 7571/16695, 393/640, -92097/339200, 187/2100, 1/40}
+d = {0., 0., 0., 0., 0., 0., 1.}
+order  = 5
+order_step_control = 3
+stages = 6
+stages_bar = 7
+local_error_control = true
 
 -- Use constant mass matrix
 const_mass_matrix = 1
@@ -99,9 +117,10 @@ imax = 100
 
 -- Integration interval and step size
 t0 = 0
-te = 15
-steps = 15 * 2^([[ 10 || 16 || 15 || 14 || 13 || 12 || 11 ]])
---steps = 15* 2^20
+te = 1
+-- steps = 15 * 2^([--[ 10 || 16 || 15 || 14 || 13 || 12 || 11 ]])
+-- steps = 2^([--[ 7 || 8 || 9 ]])
+steps = 2^13
 
 -- Variable time grid (only for flag VARIABLE_STEPS activated)
 -- note that tspan is supposed to have an extra step in order to calculate the

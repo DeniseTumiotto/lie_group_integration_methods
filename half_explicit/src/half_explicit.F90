@@ -414,12 +414,12 @@ module half_explicit
       ! real(8), dimension(this%sizev+this%sizel)   :: dVl_variable_step
       real(8), dimension(this%sizev)              :: Vcrr
       real(8), dimension(this%half_explicit_s_bar+1,   this%sizeq) :: Qn
-      ! real(8), dimension(                            this%sizeq) :: Qn_variable_step
+      real(8), dimension(                            this%sizeq) :: Qn_local_error
       real(8), dimension(this%half_explicit_s_bar+1,   this%sizev) :: Vn
-      ! real(8), dimension(                            this%sizev) :: Vn_variable_step
+      real(8), dimension(                            this%sizev) :: Vn_local_error
       real(8), dimension(this%half_explicit_s_bar+1,   this%sizev) :: Thetan
       real(8), dimension(this%half_explicit_s_bar, this%sizev) :: dThetan
-      ! real(8), dimension(                            this%sizev) :: Thetan_variable_step
+      real(8), dimension(                            this%sizev) :: Thetan_local_error
       real(8), dimension(this%half_explicit_s_bar, this%sizev) :: dVn
       ! real(8), dimension(                            this%sizev) :: dVn_variable_step
       real(8), dimension(this%half_explicit_s_bar, this%sizel) :: Lambdan
@@ -435,7 +435,7 @@ module half_explicit
       h = t1 - this%t
 
       ! first stage
-      print *, "fist stage"
+      ! print *, "fist stage"
       Thetan(1,1:this%sizev) = 0.0_8
       Qn(1,1:this%sizeq) = this%q
       ! Qn(1,1:this%sizeq) = this%half_explicit_qlpexphDqtilde(this%q, 1.0_8, Thetan(1,:))
@@ -470,7 +470,7 @@ module half_explicit
       this%half_explicit_stats%ngcalls = this%half_explicit_stats%ngcalls + 1
       this%half_explicit_stats%nBcalls = this%half_explicit_stats%nBcalls + 1
       ! 3. SOLVE THE SYSTEM
-      print *, "fist stage - linear system"
+      ! print *, "fist stage - linear system"
       call dgesv(         &! solve the System A*X=B and save the result in B
                   this%sizev,      &! number of linear equations (=size(A,1))      ! Vorsicht: double precision muss real(8) sein, sonst gibt es Probleme
                   1,       &! number of right hand sides (=size(B,2))
@@ -484,14 +484,14 @@ module half_explicit
       if (info .ne. 0)  print*, "TimeStep--fist step: dgesv sagt info=", info ! TODO
 
       ! second stage (only Theta_2 and Q_2)
-      print *, "second stage - Theta and Q"
+      ! print *, "second stage - Theta and Q"
       Thetan(2,:) = h * this%half_explicit_A(2,1) * dThetan(1,:)
       Qn(2,:) = this%half_explicit_qlpexphDqtilde(this%q, 1.0_8, Thetan(2,:))
       ! Vn(2,:) = this%v + h * this%half_explicit_A(2,1) * dVn(1,:)
 
       ! following stages
       do i=2,this%half_explicit_s_bar + 1
-         print *, "stage ", i
+         ! print *, "stage ", i
          ! evaluate V_i
          Vn(i,:) = this%v
          do j = 1,i-1
@@ -548,7 +548,7 @@ module half_explicit
             ! count calls
             this%half_explicit_stats%ngcalls = this%half_explicit_stats%ngcalls + 1
             ! then solve the system
-            print *, "stage ", i, " - linear system"
+            ! print *, "stage ", i, " - linear system"
             call dgesv(                       &! solve the System A*X=B and save the result in B
                        this%sizev+this%sizel, &! number of linear equations (=size(A,1))      ! Vorsicht: double precision muss real(8) sein, sonst gibt es Probleme
                        1,                     &! number of right hand sides (=size(B,2))
@@ -563,36 +563,36 @@ module half_explicit
             Lambdan(i,:) = dVl(this%sizev+1:this%sizev+this%sizel)
          end if
 
-         ! if ( (this%opts%local_error_control) .and. (i == this%half_explicit_s_bar + 1) ) then
-         !    ! evaluate Theta_error_control and Q_error_control
-         !    Thetan_variable_step = 0.0_8
-         !    do j=1,i-1
-         !       Thetan_variable_step = Thetan_variable_step + h * this%half_explicit_variable_step_coeff(j) * dThetan(j,:)
-         !    end do
-         !    Qn_variable_step = this%half_explicit_qlpexphDqtilde(this%q, 1.0_8, Thetan_variable_step)
-         !    Vn_variable_step = this%v
-         !    do j = 1,i-1
-         !       Vn_variable_step = Vn_variable_step + h * this%half_explicit_variable_step_coeff(j) * dVn(j,:)
-         !    end do
+         if ( (this%opts%local_error_control) .and. (i == this%half_explicit_s_bar + 1) ) then
+            ! evaluate Theta_error_control and Q_error_control
+            Thetan_local_error = 0.0_8
+            do j=1,i-1
+               Thetan_local_error = Thetan_local_error + h * this%half_explicit_variable_step_coeff(j) * dThetan(j,:)
+            end do
+            Qn_local_error = this%half_explicit_qlpexphDqtilde(this%q, 1.0_8, Thetan_local_error)
+            Vn_local_error = this%v
+            do j = 1,i-1
+               Vn_local_error = Vn_local_error + h * this%half_explicit_variable_step_coeff(j) * dVn(j,:)
+            end do
 
-         !    if (allocated(this%local_est_err)) deallocate(this%local_est_err)
-         !    allocate(this%local_est_err(this%sizeq + this%sizev))
-         !    this%local_est_err(1:this%sizeq) = abs(Qn(this%half_explicit_s+1,:) - Qn_variable_step)
-         !    this%local_est_err(this%sizeq+1:this%sizeq+this%sizev) = abs(Vn(this%half_explicit_s+1,:) - Vn_variable_step)
+            ! if (allocated(this%local_est_err)) deallocate(this%local_est_err)
+            ! allocate(this%local_est_err(this%sizeq + this%sizev))
+            this%local_est_err(1:this%sizeq) = abs(Qn(this%half_explicit_s+1,:) - Qn_local_error)
+            this%local_est_err(this%sizeq+1:this%sizeq+this%sizev) = abs(Vn(this%half_explicit_s+1,:) - Vn_local_error)
 
-         !    this%err = 0.0_8
-         !    ! evaluate local error
-         !    do j = 1,this%sizeq+this%sizev
-         !       if (j < this%sizeq + 1) then
-         !          this%err = this%err + ((Qn(this%half_explicit_s+1,j)-Qn_variable_step(j))/(this%opts%atol + max(abs(Qn(this%half_explicit_s+1,j)),abs(Qn(1,j))) * this%opts%rtol))**2
-         !       else
-         !          this%err = this%err + ((Vn(this%half_explicit_s+1,j-this%sizeq)-Vn_variable_step(j-this%sizeq))/(this%opts%atol + max(abs(Vn(this%half_explicit_s+1,j-this%sizeq)),abs(Vn(1,j-this%sizeq))) * this%opts%rtol))**2
-         !       end if
-         !    end do
-         !    this%err = sqrt(this%err / (this%sizeq + this%sizev))
-         ! end if
+            this%err = 0.0_8
+            ! evaluate local error
+            do j = 1,this%sizeq+this%sizev
+               if (j < this%sizeq + 1) then
+                  this%err = this%err + ((Qn(this%half_explicit_s+1,j)-Qn_local_error(j))/(this%opts%atol + max(abs(Qn(this%half_explicit_s+1,j)),abs(Qn(1,j))) * this%opts%rtol))**2
+               else
+                  this%err = this%err + ((Vn(this%half_explicit_s+1,j-this%sizeq)-Vn_local_error(j-this%sizeq))/(this%opts%atol + max(abs(Vn(this%half_explicit_s+1,j-this%sizeq)),abs(Vn(1,j-this%sizeq))) * this%opts%rtol))**2
+               end if
+            end do
+            this%err = sqrt(this%err / (this%sizeq + this%sizev))
+         end if
       end do
-      print *, "saving solutions"
+      ! print *, "saving solutions"
       this%q = Qn(this%half_explicit_s+1,:)
       this%v = Vn(this%half_explicit_s+1,:)
       this%l = 0.0_8
@@ -600,7 +600,8 @@ module half_explicit
          this%l = this%l + this%half_explicit_d(i) * Lambdan(i,:)
       end do
       this%t = t1
-      print *, "exit"
+      ! print *, "exit"
+      print *, "err=", this%err
    end subroutine half_explicit_solveConstrainedTimeStep
 
    ! subroutine for integrating one time step
@@ -619,12 +620,12 @@ module half_explicit
       real(8)                           :: h       ! step size
       real(8), dimension(this%half_explicit_s_bar+1, this%sizeq) :: Qn
       real(8), dimension(this%half_explicit_s_bar+1, this%sizev) :: Vn
-      real(8), dimension(                          this%sizeq) :: Qn_variable_step
-      real(8), dimension(                          this%sizev) :: Vn_variable_step
+      real(8), dimension(                          this%sizeq) :: Qn_local_error
+      real(8), dimension(                          this%sizev) :: Vn_local_error
       real(8), dimension(this%half_explicit_s_bar+1, this%sizev) :: Thetan
       real(8), dimension(this%half_explicit_s_bar+1, this%sizev) :: dThetan
       real(8), dimension(this%half_explicit_s_bar+1, this%sizev) :: dVn
-      real(8), dimension(                          this%sizev) :: Thetan_variable_step
+      real(8), dimension(                          this%sizev) :: Thetan_local_error
       real(8), dimension(this%sizev,  this%sizev) :: M
 
       ! internal logical variables
@@ -674,28 +675,28 @@ module half_explicit
          Thetan(i,:) = 0.0_8
          Vn(i,:) = this%v
          if ((this%opts%step_size_control) .and. (i == this%half_explicit_s_bar+1)) then
-            Thetan_variable_step = 0.0_8
-            Vn_variable_step = this%v
+            Thetan_local_error = 0.0_8
+            Vn_local_error = this%v
          end if
          do j=1,i-1
             Thetan(i,:)=Thetan(i,:) + h * this%half_explicit_A(i,j) * dThetan(j,:)
             Vn(i,:) = Vn(i,:) + h * this%half_explicit_A(i,j) * dVn(j,:)
             if ((this%opts%step_size_control) .and. (i == this%half_explicit_s_bar+1)) then
-               Thetan_variable_step=Thetan_variable_step + h * this%half_explicit_variable_step_coeff(j) * dThetan(j,:)
-               Vn_variable_step = Vn_variable_step + h * this%half_explicit_variable_step_coeff(j) * dVn(j,:)
+               Thetan_local_error=Thetan_local_error + h * this%half_explicit_variable_step_coeff(j) * dThetan(j,:)
+               Vn_local_error = Vn_local_error + h * this%half_explicit_variable_step_coeff(j) * dVn(j,:)
             end if
          end do
          Qn(i,:) = this%half_explicit_qlpexphDqtilde(this%q, 1.0_8, Thetan(i,:))
          if ((this%opts%step_size_control) .and. (i == this%half_explicit_s_bar+1)) then
-            Qn_variable_step = this%half_explicit_qlpexphDqtilde(this%q, 1.0_8, Thetan_variable_step)
+            Qn_local_error = this%half_explicit_qlpexphDqtilde(this%q, 1.0_8, Thetan_local_error)
 
             this%err = 0.0_8
             ! evaluate local error
             do j = 1,this%sizeq+this%sizev
                if (j < this%sizeq + 1) then
-                  this%err = this%err + ((Qn(i,j)-Qn_variable_step(j))/(this%opts%atol + max(abs(Qn(i,j)),abs(Qn(1,j))) * this%opts%rtol))**2
+                  this%err = this%err + ((Qn(i,j)-Qn_local_error(j))/(this%opts%atol + max(abs(Qn(i,j)),abs(Qn(1,j))) * this%opts%rtol))**2
                else
-                  this%err = this%err + ((Vn(i,j-this%sizeq)-Vn_variable_step(j-this%sizeq))/(this%opts%atol + max(abs(Vn(i,j-this%sizeq)),abs(Vn(1,j-this%sizeq))) * this%opts%rtol))**2
+                  this%err = this%err + ((Vn(i,j-this%sizeq)-Vn_local_error(j-this%sizeq))/(this%opts%atol + max(abs(Vn(i,j-this%sizeq)),abs(Vn(1,j-this%sizeq))) * this%opts%rtol))**2
                end if
             end do
             this%err = sqrt(this%err / (this%sizeq + this%sizev))
@@ -878,7 +879,7 @@ module half_explicit
             call this%half_explicit_solveTimeStep(t1)
          end do
       else
-         print *, "initial integration"
+         ! print *, "initial integration"
          ! calculate correct initial values
          call this%half_explicit_calcInitialConstrained()
          ! output for the first time
@@ -953,10 +954,10 @@ module half_explicit
             ! if (n>1) then
             !    print *, 'er=', this%err
             ! endif
-            print *, "starting time step ", i+1
+            ! print *, "starting time step ", i+1
             call this%half_explicit_solveConstrainedTimeStep(t1)
             i = i + 1
-            print *, "time step ", i, " complete!"
+            ! print *, "time step ", i, " complete!"
          end do
       end if
       ! stop stopwatch

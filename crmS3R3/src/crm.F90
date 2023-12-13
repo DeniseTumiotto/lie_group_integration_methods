@@ -2232,6 +2232,11 @@ module testprobcrm
          end if
 
          ! Allocate memory for q, v, vd and a
+#if defined(INT_half_explicit)
+         if (allocated(this%local_est_err)) deallocate(this%local_est_err)
+            allocate(this%local_est_err(this%sizeq + this%sizev))
+#endif
+
          if (allocated(this%q)) then
             deallocate(this%q)
          end if
