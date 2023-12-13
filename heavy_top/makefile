@@ -25,7 +25,7 @@ else
 endif
 
 # Set path of the implementation of the aotus library
-AOTP = ../aotus
+AOTP = ../../aotus
 
 # Set path of the implementation of the Lie group functions
 LIEFUNP = ../liegroup
