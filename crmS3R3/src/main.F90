@@ -152,6 +152,10 @@ program main
    call error_check(conf, iError, 'local_error_control')
    print *, 'local_error_control = ', prob%opts%local_error_control
 
+   call aot_get_val(L = conf, key = 'step_size_control', val = prob%opts%step_size_control, ErrCode = iError)
+   call error_check(conf, iError, 'step_size_control')
+   print *, 'step_size_control = ', prob%opts%step_size_control
+   
    if (prob%opts%local_error_control) then
       if (allocated(ivvError)) then
          deallocate(ivvError)

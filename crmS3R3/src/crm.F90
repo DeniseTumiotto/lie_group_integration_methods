@@ -1379,7 +1379,7 @@ module testprobcrm
                   rslt(this%n+i, 6*i+1-r:6*i+3-r) = T(5,1:3)
                end if
             else
-               if (this%fixed_p0 == 1) then
+               if (this%fixed_pn == 1) then
                   ERROR STOP "free x, fixed p not implemented"
                else
                   rslt(       i, 6*i+1-r:6*i+6-r) = T(4,:)
@@ -2322,7 +2322,9 @@ module testprobcrm
                allocate(this%opts%jour(this%sizev+this%sizel))
             end if
 #endif
+#if !defined(INT_half_explicit)
             call this%calculate_jour()
+#endif
          end if
 
          ! Allocate and create variables needed for output at custom
