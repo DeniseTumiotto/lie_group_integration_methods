@@ -85,7 +85,8 @@ out = readLua(luafname, ...
                  'order', ...
                  'stages', ...
                  'stages_bar', ...
-                 'eval_local_err'});
+                 'eval_local_err',...
+                 'step_control'});
    else
       intopts = struct();
    end
@@ -177,7 +178,7 @@ else
 %      sizel = sizel + (out.n - 1);
 %   end
     size_err = 0;
-    if strcmp(out.integrator,'half_explicit') && out.eval_local_err
+    if strcmp(out.integrator,'half_explicit') && (out.eval_local_err == 1)
        size_err = sizeq + sizev + 1;
     end
 
@@ -256,7 +257,7 @@ if (sizel > 0)
    end
 end
 
-if strcmp(out.integrator,'half_explicit') && out.eval_local_err
+if strcmp(out.integrator,'half_explicit') && (out.eval_local_err == 1)
     out.rslt.local_est_err = bin(1+sizeq+(1+has_vd)*sizev+2*sizel+sizeeta + sizel + 1:...
                                  1+sizeq+(1+has_vd)*sizev+2*sizel+sizeeta + sizel + size_err - 1,:);
     out.rslt.local_err = bin(1+sizeq+(1+has_vd)*sizev+2*sizel+sizeeta + sizel + size_err,:);
