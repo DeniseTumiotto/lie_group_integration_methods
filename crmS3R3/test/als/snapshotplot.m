@@ -1,56 +1,62 @@
-function snapshotplot(sol, ts, stride)
-
+function snapshotplot(sol, traj_extr, stride, bw, ts)
+figure()
 hold on;
 
-if nargin < 2
-   %ts =  0:2.5:15;
-   ts = [0 2 3 4 5 6 7 8 9 10 11 12 13 14 15];
+if nargin < 5
+    if nargin < 4
+        bw = 0;
+        if nargin < 3
+            stride = 8;
+            if nargin < 2
+                traj_extr = 0;
+            end
+        end
+    end
+   ts =  linspace(0, sol.te, stride);
 end
 
-if nargin < 3
-   stride = 8;
+if traj_extr
+    if sol.fixed_x0 == 0 && sol.fixed_p0 == 0
+       plot3(sol.rslt.q(5,1:stride:end), sol.rslt.q(6,1:stride:end), sol.rslt.q(7,1:stride:end),...
+           ':k', 'LineWidth',2,'DisplayName','trajectory left end');
+    end
+    if sol.fixed_xn == 0 && sol.fixed_pn == 0
+       plot3(sol.rslt.q(end-2,1:stride:end), sol.rslt.q(end-1,1:stride:end), sol.rslt.q(end,1:stride:end),...
+           ':k', 'LineWidth',2,'DisplayName','trajectory right end');
+    end
 end
 
-leg = {};
-
-if sol.fixed_x0 == 0 && sol.fixed_p0 == 0
-   plot3(sol.rslt.q(5,1:stride:end), sol.rslt.q(6,1:stride:end), sol.rslt.q(7,1:stride:end),'b');
-   leg{end+1} = 'trajectory_left_end';
+N = length(ts);
+if bw
+    color = linspecer(N+3,'gray');
+else
+    color = linspecer(N);
 end
-if sol.fixed_xn == 0 && sol.fixed_pn == 0
-   plot3(sol.rslt.q(end-2,1:stride:end), sol.rslt.q(end-1,1:stride:end), sol.rslt.q(end,1:stride:end),'b');
-   leg{end+1} = 'trajectory_right_end';
-end
-
-
-
-for it=1:length(ts)
+for it=1:N
+   % t = sol.rslt.t(it);
    t = ts(it);
 
    % Minimal index
    [~, ind] = min(abs(sol.rslt.t - t));
-
    [~, xs] = q_to_ps_xs(sol.rslt.q(:,ind), sol);
 
    % Plot
-   plot3(xs(1,:), xs(2,:), xs(3,:), 'r-o', 'MarkerSize',3);
-
-   % for the legend
-   leg{end+1} = ['t=' num2str(t)];
+   plot3(xs(1,:), xs(2,:), xs(3,:), '-o', 'MarkerSize',5, 'LineWidth',3, ...
+         'DisplayName', sprintf('t=%.1f s', t), 'Color', color(end-(it-1),:));
 end
+ax=gca;
+ax.FontSize = 16;
 
-legend(leg{:});
-
-
-xlabel('x');
-ylabel('y');
-zlabel('z');
+legend('FontSize', 16, 'Location','best');
+xlabel('x', 'FontSize', 24);
+ylabel('y', 'FontSize', 24);
+zlabel('z', 'FontSize', 24);
 
 grid off;
 grid on;
 
-axis equal;
-axis tight;
+% axis equal;
+% axis tight;
 
 function [ps, xs] = q_to_ps_xs(q,sol)
 
