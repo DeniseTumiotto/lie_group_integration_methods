@@ -77,6 +77,15 @@ out = readLua(luafname, ...
           'perturb_s'});
    elseif strcmp(out.integrator,'BLieDF')
       intopts = readLua(luafname, {'k_bdf'});
+   elseif strcmp(out.integrator,'half_explicit')
+      intopts = readLua(luafname, ...
+                {'A', ...
+                 'c', ...
+                 'd', ...
+                 'order', ...
+                 'stages', ...
+                 'stages_bar', ...
+                 'eval_local_err'});
    else
       intopts = struct();
    end
@@ -92,6 +101,15 @@ catch ME
    matched = false;
    return;
 end
+
+% Load statistics from lua file
+out.stats = readLua(luafname, ...
+                    {'cpu_time',...
+                     'newt_steps_max',...
+                     'newt_steps_avg',...
+                     'n_g_calls',...
+                     'n_B_calls',...
+                     'n_prints'});
 
 if isempty(out.steps)
    warning([luafname ' has no ''steps'', so it''s probably empty or corrupted. Skipping']);
@@ -113,7 +131,7 @@ end
 disp(luafname); % DEBUG
 
 %% Calculate sizes
-if strcmp(out.integrator,'RATTLie') || strcmp(out.integrator,'SHAKELie')
+if strcmp(out.integrator,'RATTLie') || strcmp(out.integrator,'SHAKELie') || strcmp(out.integrator,'half_explicit')
    has_vd = 0;
 else
    has_vd = 1;
@@ -158,8 +176,12 @@ else
 %   if out.inextensible == 1
 %      sizel = sizel + (out.n - 1);
 %   end
+    size_err = 0;
+    if strcmp(out.integrator,'half_explicit') && out.eval_local_err
+       size_err = sizeq + sizev + 1;
+    end
 
-   sizebin1 = 1 + sizeq + (1+has_vd)*sizev + 3*sizel;
+   sizebin1 = 1 + sizeq + (1+has_vd)*sizev + 3*sizel + size_err; % 1 (time) + ecc
    if (out.stab2 == 1)
       sizebin1 = sizebin1 + sizel;
    end
@@ -174,10 +196,13 @@ else
    if isempty(out.variable_steps) || out.variable_steps ~= 1
       sizebin2 = out.steps + 1;
    else
-      sizebin2 = 4*out.steps + 1
+      sizebin2 = 4*out.steps + 1;
    end
 end
 
+if strcmp(out.integrator,'half_explicit')
+    sizebin2 = out.stats.n_prints;
+end
 
 
 % Test if binary file is intact
@@ -231,6 +256,12 @@ if (sizel > 0)
    end
 end
 
+if strcmp(out.integrator,'half_explicit') && out.eval_local_err
+    out.rslt.local_est_err = bin(1+sizeq+(1+has_vd)*sizev+2*sizel+sizeeta + sizel + 1:...
+                                 1+sizeq+(1+has_vd)*sizev+2*sizel+sizeeta + sizel + size_err - 1,:);
+    out.rslt.local_err = bin(1+sizeq+(1+has_vd)*sizev+2*sizel+sizeeta + sizel + size_err,:);
+end
+
 % Check second dimension of bin
 if isempty(out.variable_steps) || out.variable_steps ~= 1
    if size(bin,2) ~= sizebin2
@@ -252,11 +283,3 @@ else
       out.rslt.finished = true;
    end
 end
-
-% Load statistics from lua file
-out.stats = readLua(luafname, ...
-                    {'cpu_time',...
-                     'newt_steps_max',...
-                     'newt_steps_avg',...
-                     'n_g_calls',...
-                     'n_B_calls'});
