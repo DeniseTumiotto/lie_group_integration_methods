@@ -63,6 +63,7 @@ module half_explicit
       integer  :: nBcalls = 0
       ! integration time
       real(8)  :: time = 0.0_8
+      integer  :: n_prints = 0
    end type half_explicit_statistics
 
    ! definition of abstract problem type
@@ -831,8 +832,9 @@ module half_explicit
       this%half_explicit_stats%newt_steps_sum  = 0
       this%half_explicit_stats%newt_steps_max  = 0
       this%half_explicit_stats%newt_steps_avg  = 0
-      this%half_explicit_stats%ngcalls = 0
-      this%half_explicit_stats%nBcalls = 0
+      this%half_explicit_stats%ngcalls  = 0
+      this%half_explicit_stats%nBcalls  = 0
+      this%half_explicit_stats%n_prints = 0
 
       ! if mass matrix is constant, calculate it
       if (this%opts%const_mass_matrix == 1) then
@@ -859,6 +861,8 @@ module half_explicit
             if ( n == 1 ) then
                ! output for the first time
                call this%half_explicit_outputFunction(1)
+               ! counting prints
+               this%half_explicit_stats%n_prints = this%half_explicit_stats%n_prints+1
             end if
             ! solve time step
             call this%half_explicit_solveTimeStep(t1)
@@ -867,7 +871,9 @@ module half_explicit
                ! calculate correct initial values
                call this%half_explicit_calcInitialConstrained()
                ! output for the first time
-               call this%half_explicit_outputFunction(1)
+               call this%half_explicit_outputFunction(1)               
+               ! counting prints
+               this%half_explicit_stats%n_prints = this%half_explicit_stats%n_prints+1
             end if
             ! solve time step
             call this%half_explicit_solveConstrainedTimeStep(t1)
@@ -887,11 +893,15 @@ module half_explicit
             if ( this%err .le. 1.0_8 ) then
                ! output normally
                call this%half_explicit_outputFunction(1)
+               ! counting prints
+               this%half_explicit_stats%n_prints = this%half_explicit_stats%n_prints+1
             end if
          else
             n = n+1
             t1 = this%opts%t0 + n*h
             call this%half_explicit_outputFunction(1)
+            ! counting prints
+            this%half_explicit_stats%n_prints = this%half_explicit_stats%n_prints+1
          end if
 
       end do
@@ -912,6 +922,7 @@ module half_explicit
       print *, '#calls of B:   ', this%half_explicit_stats%nBcalls
       print *, 'newt_steps_max:', this%half_explicit_stats%newt_steps_max
       print *, 'newt_steps_avg:', this%half_explicit_stats%newt_steps_avg
+      print *, 'n_prints:      ', this%half_explicit_stats%n_prints
    end subroutine half_explicit_print_stats
 
    subroutine print_matrix(A,Aname)

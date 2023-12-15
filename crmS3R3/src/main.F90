@@ -156,7 +156,7 @@ program main
    call error_check(conf, iError, 'step_size_control')
    print *, 'step_size_control = ', prob%opts%step_size_control
    
-   if (prob%opts%local_error_control) then
+   if (prob%opts%local_error_control .or. prob%opts%step_size_control) then
       if (allocated(ivvError)) then
          deallocate(ivvError)
       end if
@@ -168,6 +168,11 @@ program main
          call error_check(conf, ivvError(i), 'b')
       end do
       print *, 'b = ', prob%GL(INTEGRATOR)_variable_step_coeff
+
+      call aot_get_val(L = conf, key = 'order_step_control', val = prob%GL(INTEGRATOR)_order_variable_step, ErrCode = iError)
+      call error_check(conf, iError, 'order_step_control')
+      print *, 'order_step_control = ', prob%GL(INTEGRATOR)_order_variable_step
+
    end if
 #endif
 
@@ -558,6 +563,14 @@ program main
    write (out_lua_lun, *) 'variable_steps = 0'
 #endif
 
+#ifdef INT_half_explicit
+      if ( prob%opts%local_error_control ) then
+         write (out_lua_lun, *) 'eval_local_err = 1'
+      else
+         write (out_lua_lun, *) 'eval_local_err = 0'
+      end if
+#endif
+
    ! Open binary output file
    open(newunit = prob%out_bin_lun,            &
         file    = trim(prob%out_fname)//'.bin',&
@@ -601,6 +614,7 @@ program main
    write (out_lua_lun, *) 'newt_steps_avg = ', prob%GL(INTEGRATOR)_stats%newt_steps_avg
    write (out_lua_lun, *) 'n_g_calls = ', prob%GL(INTEGRATOR)_stats%ngcalls
    write (out_lua_lun, *) 'n_B_calls = ', prob%GL(INTEGRATOR)_stats%nBcalls
+   write (out_lua_lun, *) 'n_prints = ', prob%GL(INTEGRATOR)_stats%n_prints
 
    ! Clean up
    call prob%GL(INTEGRATOR)_cleanup()

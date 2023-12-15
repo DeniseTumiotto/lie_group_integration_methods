@@ -1903,7 +1903,7 @@ module testprobcrm
                            write (this%out_bin_lun) this%q, this%v, &
 #if defined(INT_RATTLie) || defined(INT_varint4lie)
                               this%l, this%lm, &
-#elif defined(INT_SHAKELie)
+#elif defined(INT_SHAKELie) || defined(INT_half_explicit)
                               this%l, this%eta, &
 #else
                               this%vd, this%l, this%eta, &
@@ -1914,7 +1914,7 @@ module testprobcrm
                               ERROR STOP "RATTLie does not support index-3"
 #elif defined(INT_varint4lie)
                               ERROR STOP "varint4lie does not support index-3"
-#elif defined(INT_SHAKELie)
+#elif defined(INT_SHAKELie) || defined(INT_half_explicit)
                            write (this%out_bin_lun) this%q, this%v, &
                               this%l, this%GL(INTEGRATOR)_phi(this%q), matmul(this%GL(INTEGRATOR)_B(this%q), this%v)
 #else
@@ -1923,7 +1923,7 @@ module testprobcrm
 #endif
                         end if
                      else
-#if defined(INT_RATTLie) || defined(INT_SHAKELie) || defined(INT_varint4lie)
+#if defined(INT_RATTLie) || defined(INT_SHAKELie) || defined(INT_varint4lie) || defined(INT_half_explicit)
                         write (this%out_bin_lun) this%q, this%v
 #else
                         write (this%out_bin_lun) this%q, this%v, this%vd
@@ -1933,7 +1933,12 @@ module testprobcrm
                      !flush (this%out_bin_lun)
                      !! GUBED
                   end if
-
+#if defined(INT_half_explicit)
+if ( this%opts%local_error_control ) then
+   write (this%out_bin_lun) this%local_est_err
+   write (this%out_bin_lun) this%err
+end if
+#endif
                   ! write misc output (DEBUG)
                   write (this%out_misc_lun,*) this%t , this%GL(INTEGRATOR)_stats%newt_steps_curr, this%GL(INTEGRATOR)_stats%newt_steps_max, this%GL(INTEGRATOR)_stats%newt_steps_avg
                   flush (this%out_misc_lun)

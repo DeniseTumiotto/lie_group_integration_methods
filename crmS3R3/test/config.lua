@@ -71,7 +71,67 @@ k_bdf = 2
 -- local_error_control = false
 -- step_size_control = false
 
--- Automatic step size control HEDOP5 (kirchhoff = 1 --> constrained)
+-- A = { 0.,  0.,  0.,
+--      1/2,  0.,  0.,
+--      2/9, 4/9,  0.,
+--      1/4,  0., 3/4}
+-- c = {0., 1/2, 2/3, 1.}
+-- d = {0., -2., 3., 0.}
+-- order  = 3
+-- stages = 3
+-- stages_bar = 3
+-- local_error_control = false
+-- step_size_control = false
+
+-- Only for constrained problems
+-- A = { 0.,   0.,  0.,  0., 0.,
+--       1.,   0.,  0.,  0., 0.,
+--      3/8,  1/8,  0.,  0., 0.,
+--     -1/2, -1/2,  2.,  0., 0.,
+--      1/6,  0., 2/3, 1/6, 0.,
+--      1/6 - math.sqrt(3)/108,  0., 1/3 - 4*math.sqrt(3)/27,  -7*math.sqrt(3)/108, math.sqrt(3)/18}
+-- c = {0., 1., 1/2, 1., 1., 0.2113}
+-- d = {0., 0., 0., 0., 1.}
+-- order  = 4
+-- stages = 4
+-- stages_bar = 4
+-- local_error_control = false
+-- step_size_control = false
+
+-- -- Only for unconstrained problems
+-- A = { 0.,  0.,  0., 0.,
+--      1/2,  0.,  0., 0.,
+--       0., 1/2,  0., 0.,
+--       0.,  0.,  1., 0.,
+--      1/6, 1/3, 1/3, 1/6}
+-- c = {0., 1/2, 1/2, 1., 1.}
+-- d = {0., 0., 0., 1.}
+-- order  = 4
+-- stages = 4
+-- stages_bar = 4
+-- local_error_control = false
+-- step_size_control = false
+
+-- -- Automatic step size control DOPRI5 (kirchhoff = 0 --> unconstrained)
+-- A = {   0.,          0.,         0.,         0.,          0.,    0., 0.,
+--        1/5,          0.,         0.,         0.,          0.,    0., 0.,
+--       3/40,        9/40,         0.,         0.,          0.,    0., 0.,
+--      44/45,      -56/15,       32/9,         0.,          0.,    0., 0.,
+-- 19372/6561, -25360/2187, 64448/6561,   -212/729,          0.,    0., 0.,
+--  9017/3168,     -355/33, 46732/5247,     49/176, -5103/18656,    0., 0.,
+--     35/384,          0.,   500/1113,    125/192,  -2187/6784, 11/84, 0.,
+--     35/384,          0.,   500/1113,    125/192,  -2187/6784, 11/84, 0.}
+-- c = {0., 1/5, 3/10, 4/5, 8/9, 1., 1., 1.}
+-- b = {5179/57600, 0., 7571/16695, 393/640, -92097/339200, 187/2100, 1/40}
+-- d = {0., 0., 0., 0., 0., 0., 1.}
+-- order  = 5
+-- order_step_control = 4
+-- stages = 6
+-- stages_bar = 7
+-- local_error_control = true
+-- step_size_control = false
+
+-- -- Automatic step size control HEDOP5 (kirchhoff = 1 --> constrained)
 A = {   0.,          0.,         0.,         0.,          0.,    0., 0.,
        1/5,          0.,         0.,         0.,          0.,    0., 0.,
       3/40,        9/40,         0.,         0.,          0.,    0., 0.,
@@ -119,8 +179,8 @@ imax = 100
 
 -- Integration interval and step size
 t0 = 0
-te = 15
--- steps = 15 * 2^([--[ 10 || 16 || 15 || 14 || 13 || 12 || 11 ]])
+te = 5
+-- steps = te * 2^([--[ 8 || 9 || 10 || 11 || 12 || 16 ]])
 -- steps = 2^([--[ 7 || 8 || 9 ]])
 steps = te * 2^10
 
@@ -143,148 +203,149 @@ end
 -- Use stabilized index-2 formulation (only applies to the constrained case)
 stab2 = 0
 
--- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- --
--- -- -- -- Problem options   -- -- -- -- -- -- -- -- -- -- -- --
--- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- --
--- problem_name = 'roll-up'
+[[
+-- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- --
+-- -- -- Problem options   -- -- -- -- -- -- -- -- -- -- -- --
+-- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- --
+problem_name = 'roll-up'
 
--- -- Kirchhoff model
--- kirchhoff =  1
--- ---- inextensible model
--- --inextensible = 0
+-- Kirchhoff model
+kirchhoff =  1
+---- inextensible model
+--inextensible = 0
 
--- -- Calculate number of subdiagonals and superdiagonals of the iteration matrix
--- additional_subdiag = 0
--- if kirchhoff then
---    additional_subdiag = 2
--- end
--- --if inextensible then
--- --   additional_subdiag = additional_subdiag + 1
--- --end
--- if stab2 then
---    additional_subdiag = 2*additional_subdiag
--- end
--- -- In the unconstrained case there are 11 subdiagonals
--- nr_subdiag = 11 + additional_subdiag
--- -- The number of sub- and superdiagonals is equal
--- nr_superdiag = nr_subdiag
+-- Calculate number of subdiagonals and superdiagonals of the iteration matrix
+additional_subdiag = 0
+if kirchhoff then
+   additional_subdiag = 2
+end
+--if inextensible then
+--   additional_subdiag = additional_subdiag + 1
+--end
+if stab2 then
+   additional_subdiag = 2*additional_subdiag
+end
+-- In the unconstrained case there are 11 subdiagonals
+nr_subdiag = 11 + additional_subdiag
+-- The number of sub- and superdiagonals is equal
+nr_superdiag = nr_subdiag
 
--- -- Number of discretization points minus one (since we have q_0,..,q_n)
--- --n = 2^[--[ 8 || 7 || 6 || 5 || 4 || 3 || 2 ]]
--- --n = [--[ 16 || 8 ]]
--- n = 8
--- -- Length
--- L = 10
+-- Number of discretization points minus one (since we have q_0,..,q_n)
+n = 8
 
--- -- Dissipative material constants
--- CGamd = { 5.0e1,
---           5.0e1,
---           5.0e1 }
--- CKd = { 5.0e1,
---         5.0e1,
---         5.0e1 }
--- -- Material properties
--- -- CGam = [ GA, GA, EA ]
--- CGam = { 1.0e4,
---          1.0e4,
---          1.0e4}
--- -- CK = [ EI, EI, GI ]
--- CK   = { 5.0e2,
---          5.0e2,
---          5.0e2}
--- -- Difference between two discretization points
--- ds = L/n
--- -- Mass of beam segment
--- -- m = A*rho * ds
--- m = 1.0 * ds
--- -- Inertial mass of a beam segment
--- -- mI = iner * rho * ds
--- mI = { 10.0 * ds,
---        10.0 * ds,
---        10.0 * ds }
+-- Length
+L = 10
 
--- -- -- -- Initial values -- -- --
--- -- Note that  0 <= s <= 1, independent of the beam length
--- -- Initial positions
--- function x0(s)
---    return { 10.0*s,
---             0.0,
---             0.0 }
--- end
--- -- SIEHE UNTEN DEBUG
--- ---- Initial velocities
--- function V0(s)
---   return { 0, 0, 0} -- DEBUG
--- end
+-- Dissipative material constants
+CGamd = { 5.0e1,
+          5.0e1,
+          5.0e1 }
+CKd = { 5.0e1,
+        5.0e1,
+        5.0e1 }
+-- Material properties
+-- CGam = [ GA, GA, EA ]
+CGam = { 1.0e4,
+         1.0e4,
+         1.0e4}
+-- CK = [ EI, EI, GI ]
+CK   = { 5.0e2,
+         5.0e2,
+         5.0e2}
+-- Difference between two discretization points
+ds = L/n
+-- Mass of beam segment
+-- m = A*rho * ds
+m = 1.0 * ds
+-- Inertial mass of a beam segment
+-- mI = iner * rho * ds
+mI = { 10.0 * ds,
+       10.0 * ds,
+       10.0 * ds }
 
--- -- Helper functions
--- function cross(x,y)
---    return { x[2]*y[3] - x[3]*y[2],
---             x[3]*y[1] - x[1]*y[3],
---             x[1]*y[2] - x[2]*y[1] }
--- end
+-- -- -- Initial values -- -- --
+-- Note that  0 <= s <= 1, independent of the beam length
+-- Initial positions
+function x0(s)
+   return { 10.0*s,
+            0.0,
+            0.0 }
+end
+-- SIEHE UNTEN DEBUG
+---- Initial velocities
+function V0(s)
+  return { 0, 0, 0} -- DEBUG
+end
 
--- function normalize(x)
---    local norm = 0
---    for i = 1, #x do
---       norm = norm + x[i]*x[i]
---    end
---    norm = math.sqrt(norm)
---    for i = 1, #x do
---       x[i] = x[i]/norm
---    end
---    return x
--- end
+-- Helper functions
+function cross(x,y)
+   return { x[2]*y[3] - x[3]*y[2],
+            x[3]*y[1] - x[1]*y[3],
+            x[1]*y[2] - x[2]*y[1] }
+end
 
--- -- Initial rotations
--- function p0(s)
---    local v = normalize(cross({0, 0, 1},{1, 0, 0}))
---    return {    1/math.sqrt(2),
---             v[1]/math.sqrt(2),
---             v[2]/math.sqrt(2),
---             v[3]/math.sqrt(2) }
--- end
--- -- Initial angular velocities
--- function Om0(s)
---    return {0,0,0}
--- end
+function normalize(x)
+   local norm = 0
+   for i = 1, #x do
+      norm = norm + x[i]*x[i]
+   end
+   norm = math.sqrt(norm)
+   for i = 1, #x do
+      x[i] = x[i]/norm
+   end
+   return x
+end
+
+-- Initial rotations
+function p0(s)
+   local v = normalize(cross({0, 0, 1},{1, 0, 0}))
+   return {    1/math.sqrt(2),
+            v[1]/math.sqrt(2),
+            v[2]/math.sqrt(2),
+            v[3]/math.sqrt(2) }
+end
+-- Initial angular velocities
+function Om0(s)
+   return {0,0,0}
+end
 
 
--- -- External forces and moments
+-- External forces and moments
 
--- --external = 'flying_spaghetti'
--- --external_parameters = {
--- --   increasing_time = 2.5,
--- --   decreasing_time = 2.5,
--- --   maximum_height  = 200,
--- --   force_factors = {1/10, 0, 0},
--- --   moment_factors = {0, -1/2, -1}
--- --}
+--external = 'flying_spaghetti'
+--external_parameters = {
+--   increasing_time = 2.5,
+--   decreasing_time = 2.5,
+--   maximum_height  = 200,
+--   force_factors = {1/10, 0, 0},
+--   moment_factors = {0, -1/2, -1}
+--}
 
--- -- Roll-up
--- external = 'roll-up'
--- external_parameters = {
---    factor = 2*math.pi*CK[1]/L,
--- }
+-- Roll-up
+external = 'roll-up'
+external_parameters = {
+   factor = 2*math.pi*CK[1]/L,
+}
 
--- -- Gravity (DEBUG)
--- --external = 'gravity'
--- --external_parameters = {
--- --   g = -100
--- --}
+-- Gravity (DEBUG)
+--external = 'gravity'
+--external_parameters = {
+--   g = -100
+--}
 
--- -- Fixing
--- fixed_x0 = 1
--- fixed_x0_position = x0(0)
--- fixed_xn = 0
--- fixed_xn_position = x0(1)
+-- Fixing
+fixed_x0 = 1
+fixed_x0_position = x0(0)
+fixed_xn = 0
+fixed_xn_position = x0(1)
 
--- -- Fixing
--- fixed_p0 = 1
--- fixed_p0_orientation = p0(0)
--- fixed_pn = 0
--- fixed_pn_orientation = p0(1)
+-- Fixing
+fixed_p0 = 1
+fixed_p0_orientation = p0(0)
+fixed_pn = 0
+fixed_pn_orientation = p0(1)
 
+||
 
 -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- --
 -- -- -- Problem options   -- -- -- -- -- -- -- -- -- -- -- --
@@ -313,8 +374,6 @@ nr_subdiag = 11 + additional_subdiag
 nr_superdiag = nr_subdiag
 
 -- Number of discretization points minus one (since we have q_0,..,q_n)
---n = 2^[--[ 8 || 7 || 6 || 5 || 4 || 3 || 2 ]]
---n = [--[ 16 || 8 ]]
 n = 16
 
 -- Length
@@ -413,6 +472,8 @@ fixed_p0 = 0
 fixed_p0_orientation = p0(0)
 fixed_pn = 0
 fixed_pn_orientation = p0(1)
+
+]]
 
 -- -- -- Output options -- -- --
 output_t_at = 0
