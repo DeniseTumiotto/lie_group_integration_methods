@@ -94,7 +94,7 @@ module testprobcrm
       procedure   :: GL(INTEGRATOR)_Ct             => myCt
       procedure   :: GL(INTEGRATOR)_Kt             => myKt
       procedure   :: GL(INTEGRATOR)_Kt_lambda      => myKtl
-#if defined(INT_RATTLie) || defined(INT_SHAKELie) || defined(INT_varint4lie)
+#if defined(INT_RATTLie) || defined(INT_SHAKELie) || defined(INT_varint4lie) || defined(INT_half_explicit)
       procedure   :: GL(INTEGRATOR)_Tg_inv_T       => my_Tg_inv_T
       procedure   :: GL(INTEGRATOR)_d_Tg_inv_T     => my_d_Tg_inv_T
 #endif
@@ -1379,7 +1379,7 @@ module testprobcrm
                   rslt(this%n+i, 6*i+1-r:6*i+3-r) = T(5,1:3)
                end if
             else
-               if (this%fixed_p0 == 1) then
+               if (this%fixed_pn == 1) then
                   ERROR STOP "free x, fixed p not implemented"
                else
                   rslt(       i, 6*i+1-r:6*i+6-r) = T(4,:)
@@ -1903,7 +1903,7 @@ module testprobcrm
                            write (this%out_bin_lun) this%q, this%v, &
 #if defined(INT_RATTLie) || defined(INT_varint4lie)
                               this%l, this%lm, &
-#elif defined(INT_SHAKELie)
+#elif defined(INT_SHAKELie) || defined(INT_half_explicit)
                               this%l, this%eta, &
 #else
                               this%vd, this%l, this%eta, &
@@ -1914,7 +1914,7 @@ module testprobcrm
                               ERROR STOP "RATTLie does not support index-3"
 #elif defined(INT_varint4lie)
                               ERROR STOP "varint4lie does not support index-3"
-#elif defined(INT_SHAKELie)
+#elif defined(INT_SHAKELie) || defined(INT_half_explicit)
                            write (this%out_bin_lun) this%q, this%v, &
                               this%l, this%GL(INTEGRATOR)_phi(this%q), matmul(this%GL(INTEGRATOR)_B(this%q), this%v)
 #else
@@ -1923,7 +1923,7 @@ module testprobcrm
 #endif
                         end if
                      else
-#if defined(INT_RATTLie) || defined(INT_SHAKELie) || defined(INT_varint4lie)
+#if defined(INT_RATTLie) || defined(INT_SHAKELie) || defined(INT_varint4lie) || defined(INT_half_explicit)
                         write (this%out_bin_lun) this%q, this%v
 #else
                         write (this%out_bin_lun) this%q, this%v, this%vd
@@ -1933,7 +1933,12 @@ module testprobcrm
                      !flush (this%out_bin_lun)
                      !! GUBED
                   end if
-
+#if defined(INT_half_explicit)
+if ( this%opts%local_error_control ) then
+   write (this%out_bin_lun) this%local_est_err
+   write (this%out_bin_lun) this%err
+end if
+#endif
                   ! write misc output (DEBUG)
                   write (this%out_misc_lun,*) this%t , this%GL(INTEGRATOR)_stats%newt_steps_curr, this%GL(INTEGRATOR)_stats%newt_steps_max, this%GL(INTEGRATOR)_stats%newt_steps_avg
                   flush (this%out_misc_lun)
@@ -2232,6 +2237,11 @@ module testprobcrm
          end if
 
          ! Allocate memory for q, v, vd and a
+#if defined(INT_half_explicit)
+         if (allocated(this%local_est_err)) deallocate(this%local_est_err)
+            allocate(this%local_est_err(this%sizeq + this%sizev))
+#endif
+
          if (allocated(this%q)) then
             deallocate(this%q)
          end if
@@ -2317,7 +2327,9 @@ module testprobcrm
                allocate(this%opts%jour(this%sizev+this%sizel))
             end if
 #endif
+#if !defined(INT_half_explicit)
             call this%calculate_jour()
+#endif
          end if
 
          ! Allocate and create variables needed for output at custom

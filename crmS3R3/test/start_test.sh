@@ -35,10 +35,31 @@ do
 
    # Call the integrator
    echo Executing number $NUMBER at $TIMESTAMP
-   sem -j $MAXPAR  "OMP_NUM_THREADS=1 ../crm $CONF out/$(echo ${TIMESTAMP}_${NUMBER}) &> out/$(echo ${TIMESTAMP}_${NUMBER}).err && echo  && echo Success:: number $NUMBER at $TIMESTAMP ; echo Done with number $NUMBER at $TIMESTAMP"
-   ##DEBUG
-   #OMP_NUM_THREADS=1 ../crm $CONF out/$(echo ${TIMESTAMP}_${NUMBER})
+   # DEBUG
+   #operf ../crm $CONF out/$(echo ${TIMESTAMP}_${NUMBER}) &> out/$(echo ${TIMESTAMP}_${NUMBER}).err && echo  && echo Success:: number $NUMBER at $TIMESTAMP ; echo Done with number $NUMBER at $TIMESTAMP
+   #valkyrie ../crm $CONF out/$(echo ${TIMESTAMP}_${NUMBER}) &> out/$(echo ${TIMESTAMP}_${NUMBER}).err && echo  && echo Success:: number $NUMBER at $TIMESTAMP ; echo Done with number $NUMBER at $TIMESTAMP
+   # GUBED
+
+   #sem -j $MAXPAR  "OMP_NUM_THREADS=1 ../crm $CONF out/$(echo ${TIMESTAMP}_${NUMBER}) &> out/$(echo ${TIMESTAMP}_${NUMBER}).err && echo  && echo Success:: number $NUMBER at $TIMESTAMP ; echo Done with number $NUMBER at $TIMESTAMP"
+
+   OMP_NUM_THREADS=1 ../crm $CONF out/$(echo ${TIMESTAMP}_${NUMBER}) &> out/$(echo ${TIMESTAMP}_${NUMBER}).err
+   echo
+   echo Success:: number $NUMBER at $TIMESTAMP
+   echo Done with number $NUMBER at $TIMESTAMP
+
 done
+# do
+#    # Get the number
+#    NUMBER=${CONF: -11:7}
+#    # Get current time stamp
+#    TIMESTAMP=$(date +"%Y-%m-%d_%H-%M-%S")
+
+#    # Call the integrator
+#    # echo Executing number $NUMBER at $TIMESTAMP
+#    # sem -j $MAXPAR  "OMP_NUM_THREADS=1 ../crm $CONF out/$(echo ${TIMESTAMP}_${NUMBER}) &> out/$(echo ${TIMESTAMP}_${NUMBER}).err && echo  && echo Success:: number $NUMBER at $TIMESTAMP ; echo Done with number $NUMBER at $TIMESTAMP"
+#    ##DEBUG
+#    OMP_NUM_THREADS=1 ../crm $CONF out/$(echo ${TIMESTAMP}_${NUMBER})
+# done
 
 # Wait for all calculations to finish
-sem --wait
+# sem --wait
