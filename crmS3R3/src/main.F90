@@ -569,6 +569,11 @@ program main
       else
          write (out_lua_lun, *) 'eval_local_err = 0'
       end if
+      if ( prob%opts%step_size_control ) then
+         write (out_lua_lun, *) 'step_control = 1'
+      else
+         write (out_lua_lun, *) 'step_control = 0'
+      end if
 #endif
 
    ! Open binary output file
