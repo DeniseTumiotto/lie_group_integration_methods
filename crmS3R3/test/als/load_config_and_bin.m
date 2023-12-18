@@ -174,6 +174,10 @@ else
    if out.kirchhoff == 1
       sizel = sizel + 2*out.n;
    end
+   sizeeta = 0;
+   if out.stab2 == 1
+       sizeeta = sizel;
+   end
 %   if out.inextensible == 1
 %      sizel = sizel + (out.n - 1);
 %   end

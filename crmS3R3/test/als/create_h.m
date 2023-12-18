@@ -7,7 +7,7 @@ for i = 1:max(n,m)
         solcell{i}.h = (solcell{i}.te-solcell{i}.t0)/solcell{i}.steps;
     else
         nsteps = length(solcell{i}.rslt.t);
-        solcell{i}.h = zeros(nsteps,1);
+        solcell{i}.h = zeros(nsteps-1,1);
         for j = 1:nsteps-1
             solcell{i}.h(j) = solcell{i}.rslt.t(j+1)-solcell{i}.rslt.t(j);
         end
