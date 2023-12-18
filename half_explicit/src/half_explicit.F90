@@ -672,14 +672,14 @@ module half_explicit
 
       ! intenal real variables
       real(8)                           :: h       ! step size
-      real(8), dimension(this%half_explicit_s_bar+1, this%sizeq) :: Qn
-      real(8), dimension(this%half_explicit_s_bar+1, this%sizev) :: Vn
-      real(8), dimension(                          this%sizeq) :: Qn_local_error
-      real(8), dimension(                          this%sizev) :: Vn_local_error
-      real(8), dimension(this%half_explicit_s_bar+1, this%sizev) :: Thetan
-      real(8), dimension(this%half_explicit_s_bar+1, this%sizev) :: dThetan
-      real(8), dimension(this%half_explicit_s_bar+1, this%sizev) :: dVn
-      real(8), dimension(                          this%sizev) :: Thetan_local_error
+      real(8), dimension(this%half_explicit_s+1, this%sizeq) :: Qn
+      real(8), dimension(this%half_explicit_s+1, this%sizev) :: Vn
+      real(8), dimension(                        this%sizeq) :: Qn_local_error
+      real(8), dimension(                        this%sizev) :: Vn_local_error
+      real(8), dimension(this%half_explicit_s+1, this%sizev) :: Thetan
+      real(8), dimension(this%half_explicit_s,   this%sizev) :: dThetan
+      real(8), dimension(this%half_explicit_s,   this%sizev) :: dVn
+      real(8), dimension(                        this%sizev) :: Thetan_local_error
       real(8), dimension(this%sizev,  this%sizev) :: M
 
       ! internal logical variables
@@ -707,7 +707,7 @@ module half_explicit
             M(:,:) = this%half_explicit_M(Qn(1,:))
          end if
          ! we need to solve a linear equation, first calulate the rhs
-         dVn(1,:) = -this%half_explicit_g(Qn(1,:), this%v, this%t + this%half_explicit_c(1)*h)
+         dVn(1,:) = -this%half_explicit_g(Qn(1,:), Vn(1,:), this%t + this%half_explicit_c(1)*h)
          ! count calls
          this%half_explicit_stats%ngcalls = this%half_explicit_stats%ngcalls + 1
          ! then solve the system
@@ -725,7 +725,7 @@ module half_explicit
       end if
 
       ! following stages
-      do i=2,this%half_explicit_s_bar+1
+      do i=2,this%half_explicit_s + 1
          Thetan(i,:) = 0.0_8
          Vn(i,:) = this%v
          do j=1,i-1
@@ -733,51 +733,51 @@ module half_explicit
             Vn(i,:) = Vn(i,:) + h * this%half_explicit_A(i,j) * dVn(j,:)
          end do
          Qn(i,:) = this%half_explicit_qlpexphDqtilde(this%q, 1.0_8, Thetan(i,:))
-         dThetan(i,:) = matmul(transpose(this%half_explicit_Tg_inv_T(Thetan(i,:))), Vn(i,:))
-         ! calculate $\dotV_{m,i}$ --> dVn(i,:)
-         if (this%opts%diag_mass_matrix == 1) then
-            if (this%opts%const_mass_matrix == 1) then
-               dVn(i,:) = -this%half_explicit_g(Qn(i,:), Vn(i,:), this%t + this%half_explicit_c(i)*h)/this%half_explicit_const_diag_M
+         if ( i < this%half_explicit_s + 1 ) then
+            dThetan(i,:) = matmul(transpose(this%half_explicit_Tg_inv_T(Thetan(i,:))), Vn(i,:))
+            ! calculate $\dotV_{m,i}$ --> dVn(i,:)
+            if (this%opts%diag_mass_matrix == 1) then
+               if (this%opts%const_mass_matrix == 1) then
+                  dVn(i,:) = -this%half_explicit_g(Qn(i,:), Vn(i,:), this%t + this%half_explicit_c(i)*h)/this%half_explicit_const_diag_M
+               else
+                  dVn(i,:) = -this%half_explicit_g(Qn(i,:), Vn(i,:), this%t + this%half_explicit_c(i)*h)/this%half_explicit_diag_M(Qn(i,:))
+               end if
+               ! count calls
+               this%half_explicit_stats%ngcalls = this%half_explicit_stats%ngcalls + 1
             else
-               dVn(i,:) = -this%half_explicit_g(Qn(i,:), Vn(i,:), this%t + this%half_explicit_c(i)*h)/this%half_explicit_diag_M(Qn(i,:))
+               if (this%opts%const_mass_matrix == 1) then
+                  M(:,:) = this%half_explicit_const_M
+               else
+                  M(:,:) = this%half_explicit_M(Qn(i,:))
+               end if
+               ! we need to solve a linear equation, first calulate the rhs
+               dVn(i,:) = -this%half_explicit_g(Qn(i,:), Vn(i,:), this%t + h * this%half_explicit_c(i))
+               ! count calls
+               this%half_explicit_stats%ngcalls = this%half_explicit_stats%ngcalls + 1
+               ! then solve the system
+               call dgesv(         &! solve the System A*X=B and save the result in B
+                        this%sizev,      &! number of linear equations (=size(A,1))      ! Vorsicht: double precision muss real(8) sein, sonst gibt es Probleme
+                        1,       &! number of right hand sides (=size(B,2))
+                        M(:,:),  &! matrix A
+                        this%sizev,      &! leading dimension of A, in this case is equal to the number of linear equations (=size(A,1))
+                        ipiv,    &! integer pivot vector; it is not needed
+                        dVn(i,:),&! matrix B
+                        this%sizev,      &! leading dimension of B,  in this case is equal to the number of linear equations (=size(B,1)=size(A,1))
+                        info)     ! integer information flag
+               ! Now dVn(1,:) actually contains $\dot v(t_0)$
+               if (info .ne. 0)  print*, "TimeStep--fist step: dgesv sagt info=", info ! TODO
             end if
-            ! count calls
-            this%half_explicit_stats%ngcalls = this%half_explicit_stats%ngcalls + 1
-         else
-            if (this%opts%const_mass_matrix == 1) then
-               M(:,:) = this%half_explicit_const_M
-            else
-               M(:,:) = this%half_explicit_M(Qn(i,:))
-            end if
-            ! we need to solve a linear equation, first calulate the rhs
-            dVn(i,:) = -this%half_explicit_g(Qn(i,:), Vn(i,:), this%t + h * this%half_explicit_c(i))
-            ! count calls
-            this%half_explicit_stats%ngcalls = this%half_explicit_stats%ngcalls + 1
-            ! then solve the system
-            call dgesv(         &! solve the System A*X=B and save the result in B
-                       this%sizev,      &! number of linear equations (=size(A,1))      ! Vorsicht: double precision muss real(8) sein, sonst gibt es Probleme
-                       1,       &! number of right hand sides (=size(B,2))
-                       M(:,:),  &! matrix A
-                       this%sizev,      &! leading dimension of A, in this case is equal to the number of linear equations (=size(A,1))
-                       ipiv,    &! integer pivot vector; it is not needed
-                       dVn(i,:),&! matrix B
-                       this%sizev,      &! leading dimension of B,  in this case is equal to the number of linear equations (=size(B,1)=size(A,1))
-                       info)     ! integer information flag
-            ! Now dVn(1,:) actually contains $\dot v(t_0)$
-            if (info .ne. 0)  print*, "TimeStep--fist step: dgesv sagt info=", info ! TODO
          end if
 
-         if ( (this%opts%local_error_control) .and. (i == this%half_explicit_s_bar + 1) ) then
+         if ( (this%opts%local_error_control .or. this%opts%step_size_control) .and. (i == this%half_explicit_s + 1) ) then
             ! evaluate Theta_error_control and Q_error_control
             Thetan_local_error = 0.0_8
+            Vn_local_error = this%v
             do j=1,i-1
                Thetan_local_error = Thetan_local_error + h * this%half_explicit_variable_step_coeff(j) * dThetan(j,:)
-            end do
-            Qn_local_error = this%half_explicit_qlpexphDqtilde(this%q, 1.0_8, Thetan_local_error)
-            Vn_local_error = this%v
-            do j = 1,i-1
                Vn_local_error = Vn_local_error + h * this%half_explicit_variable_step_coeff(j) * dVn(j,:)
             end do
+            Qn_local_error = this%half_explicit_qlpexphDqtilde(this%q, 1.0_8, Thetan_local_error)
 
             this%local_est_err(1:this%sizeq) = abs(Qn(this%half_explicit_s+1,:) - Qn_local_error)
             this%local_est_err(this%sizeq+1:this%sizeq+this%sizev) = abs(Vn(this%half_explicit_s+1,:) - Vn_local_error)
