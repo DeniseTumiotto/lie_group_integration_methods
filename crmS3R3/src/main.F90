@@ -140,7 +140,7 @@ program main
    deallocate(tmp_A)
 
    if (allocated(ivvError)) deallocate(ivvError)
-   allocate(ivvError(prob%GL(INTEGRATOR)_s+1))
+   allocate(ivvError(prob%GL(INTEGRATOR)_s_bar))
    allocate(prob%GL(INTEGRATOR)_d(prob%GL(INTEGRATOR)_s_bar))
    call aot_get_val(L = conf, key = 'd', val = prob%GL(INTEGRATOR)_d, ErrCode = ivvError)
    do i=1,prob%GL(INTEGRATOR)_s_bar
