@@ -148,7 +148,7 @@ order_step_control = 4
 stages = 6
 stages_bar = 7
 local_error_control = true
-step_size_control = false
+step_size_control = true
 
 -- Use constant mass matrix
 const_mass_matrix = 1
@@ -180,26 +180,26 @@ imax = 100
 -- Integration interval and step size
 t0 = 0
 te = 5
-steps = math.ceil((te-t0)*2^[[ 10 || 11 || 15 || 16 || 17 || 18 ]])
+-- steps = math.ceil((te-t0)*2^[--[ 10 || 11 || 15 || 16 || 17 || 18 ]])
 -- steps = te * 2^([--[ 8 || 9 || 10 || 11 || 12 || 16 ]])
--- steps = 2^([--[ 7 || 8 || 9 ]])
--- steps = te * 2^10
+-- steps = 2^([--[ 5 || 6 || 7 || 8 || 9 ]])
+steps = math.ceil((te-t0)*2^10)
 
 -- Variable time grid (only for flag VARIABLE_STEPS activated)
 -- note that tspan is supposed to have an extra step in order to calculate the
 -- Lagrange multiplier in RATTLie
-tspan = {}
-regular_grid = false
-if regular_grid then
-   tspan[steps+1] = te
-   h = (te-t0)/steps
-   tspan[steps+2] = te + h
-   for i=0,steps-1 do
-      tspan[i+1] = t0 + i*h
-   end
-else
-   tspan = randgrid(t0, te, steps)
-end
+-- tspan = {}
+-- regular_grid = false
+-- if regular_grid then
+--    tspan[steps+1] = te
+--    h = (te-t0)/steps
+--    tspan[steps+2] = te + h
+--    for i=0,steps-1 do
+--       tspan[i+1] = t0 + i*h
+--    end
+-- else
+--    tspan = randgrid(t0, te, steps)
+-- end
 
 -- Use stabilized index-2 formulation (only applies to the constrained case)
 stab2 = 0

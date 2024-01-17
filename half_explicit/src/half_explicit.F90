@@ -823,8 +823,8 @@ module half_explicit
 
       ! Calculate step size $h$ and set $t1$ and $h_new$
       h      = (this%opts%te - this%opts%t0)/this%opts%nsteps
-      h_new  = h
-      h_old  = h
+      h_new  = (this%opts%te - this%opts%t0)/this%opts%nsteps
+      h_old  = (this%opts%te - this%opts%t0)/this%opts%nsteps
       t1     = this%opts%t0 + h
 
       ! Set stats of solver to zero
@@ -897,11 +897,11 @@ module half_explicit
                this%half_explicit_stats%n_prints = this%half_explicit_stats%n_prints+1
             end if
          else
-            n = n+1
-            t1 = this%opts%t0 + n*h
             call this%half_explicit_outputFunction(1)
             ! counting prints
             this%half_explicit_stats%n_prints = this%half_explicit_stats%n_prints+1
+            n = n+1
+            t1 = this%opts%t0 + n*h
          end if
 
       end do
