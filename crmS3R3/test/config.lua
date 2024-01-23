@@ -91,10 +91,10 @@ A = { 0.,   0.,  0.,  0., 0.,
      1/6,  0., 2/3, 1/6, 0.,
      1/6 - math.sqrt(3)/108,  0., 1/3 - 4*math.sqrt(3)/27,  -7*math.sqrt(3)/108, math.sqrt(3)/18}
 c = {0., 1., 1/2, 1., 1., 0.2113}
-d = {0., 0., 0., 1.}
+d = {0., 0., 0., 0., 1.}
 order  = 4
 stages = 4
-stages_bar = 4
+stages_bar = 5
 local_error_control = false
 step_size_control = false
 
@@ -183,22 +183,6 @@ te = 1
 steps = math.ceil((te-t0)*2^[[ 9 || 10 || 11 || 12 || 13 || 18 ]])
 -- steps = 2^([--[ 5 || 6 || 7 || 8 || 9 ]])
 -- steps = math.ceil((te-t0)*2^16)
-
--- Variable time grid (only for flag VARIABLE_STEPS activated)
--- note that tspan is supposed to have an extra step in order to calculate the
--- Lagrange multiplier in RATTLie
--- tspan = {}
--- regular_grid = false
--- if regular_grid then
---    tspan[steps+1] = te
---    h = (te-t0)/steps
---    tspan[steps+2] = te + h
---    for i=0,steps-1 do
---       tspan[i+1] = t0 + i*h
---    end
--- else
---    tspan = randgrid(t0, te, steps)
--- end
 
 -- Use stabilized index-2 formulation (only applies to the constrained case)
 stab2 = 0

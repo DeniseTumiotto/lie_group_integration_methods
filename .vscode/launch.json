@@ -1,0 +1,28 @@
+{
+    // Use IntelliSense to learn about possible attributes.
+    // Hover to view descriptions of existing attributes.
+    // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
+    "version": "0.2.0",
+    "configurations": [
+
+        {
+            "type": "cppdbg",
+            "request": "launch",
+            "name": "Launch(gdb)",
+            "program": "/home/denise/lie_group_integration_methods/crmS3R3/crm",
+            "cwd": "/home/denise/lie_group_integration_methods/crmS3R3/",
+            "args": ["/home/denise/lie_group_integration_methods/crmS3R3/test/cfg_exp/config.lua.0000000.exp", "/home/denise/lie_group_integration_methods/crmS3R3/test/out/try"],
+            "environment": [],
+            "stopAtEntry": false,
+            "externalConsole": false,
+            "MIMode": "gdb",
+            "setupCommands": [
+            {
+              "description": "Enable pretty-printing for gdb",
+              "text": "-enable-pretty-printing",
+              "ignoreFailures": false
+            }
+            ]
+        }
+    ]
+}

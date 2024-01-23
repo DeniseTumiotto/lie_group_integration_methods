@@ -109,7 +109,7 @@ program main
    print *, 'order = ', prob%GL(INTEGRATOR)_order
 
    if (allocated(ivvError)) deallocate(ivvError)
-   allocate(ivvError(prob%GL(INTEGRATOR)_s_bar))
+   allocate(ivvError(prob%GL(INTEGRATOR)_s_bar+1))
    allocate(prob%GL(INTEGRATOR)_c(prob%GL(INTEGRATOR)_s_bar+1))
    
    call aot_get_val(L = conf, key = 'c', val = prob%GL(INTEGRATOR)_c, ErrCode = ivvError)

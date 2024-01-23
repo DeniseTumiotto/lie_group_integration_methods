@@ -3,16 +3,16 @@
 
 # Set path of implementation of integrator
 ifndef INTEGRATOR
-#INTEGRATOR = BLieDF
-#INTEGRATORP = ../BLieDF
-#INTEGRATOR = gena
-#INTEGRATORP = ../gena
+# INTEGRATOR = BLieDF
+# INTEGRATORP = ../BLieDF
+# INTEGRATOR = gena
+# INTEGRATORP = ../gena
 # INTEGRATOR = RATTLie
 # INTEGRATORP = ../RATTLie
-#INTEGRATOR = varint4lie
-#INTEGRATORP = ../varint4lie
-#INTEGRATOR = SHAKELie
-#INTEGRATORP = ../SHAKELie
+# INTEGRATOR = varint4lie
+# INTEGRATORP = ../varint4lie
+# INTEGRATOR = SHAKELie
+# INTEGRATORP = ../SHAKELie
 INTEGRATOR = half_explicit
 INTEGRATORP = ../half_explicit
 endif
@@ -43,8 +43,8 @@ FFLAGS := $(FFLAGS) -DNO_Z
 #-DLIN_LOG -DAPPROX_TAN_INV_T
 
 # Extra flags for the Fortran compiler (are used for the integrator, as well)
-EXTRAFFLAGS := -O3
-#EXTRAFFLAGS := -Dpure='' -g -fbounds-check -fimplicit-none -fbacktrace -fcheck=all -finit-real=NaN
+# EXTRAFFLAGS := -O3
+EXTRAFFLAGS := -Dpure='' -ggdb3 -fbounds-check -fimplicit-none -fbacktrace -fcheck=all -finit-real=NaN
 ifdef RELAXATION
 EXTRAFFLAGS := $(EXTRAFFLAGS) -DRELAXATION
 endif
