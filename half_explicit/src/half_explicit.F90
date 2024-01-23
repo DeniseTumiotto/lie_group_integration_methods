@@ -392,6 +392,7 @@ module half_explicit
       if (info .ne. 0)  print*, "calcInitialConstrained:  dgesv sagt info=", info ! TODO
 
       ! apply the calculated values
+      this%vd = vdl(   1:   this%sizev)
       this%l  = vdl(this%sizev+1:this%sizev+this%sizel)
    end subroutine half_explicit_calcInitialConstrained
 
@@ -807,7 +808,6 @@ module half_explicit
       implicit none
       class(half_explicit_problem), intent(inout) :: this
       integer                          :: n = 1 ! needed for iteration
-      ! logical                          :: not_accepted = .false.
       real(8)                          :: h     ! step size $h$
       real(8)                          :: multi_factor
       real(8)                          :: h_new ! step size $h$ of step size control
@@ -821,11 +821,9 @@ module half_explicit
       ! initialize output function
       call this%half_explicit_outputFunction(0)
 
-      ! Calculate step size $h$ and set $t1$ and $h_new$
+      ! Calculate step size $h$ and set $t1$
       h      = (this%opts%te - this%opts%t0)/this%opts%nsteps
-      h_new  = (this%opts%te - this%opts%t0)/this%opts%nsteps
-      h_old  = (this%opts%te - this%opts%t0)/this%opts%nsteps
-      t1     = this%opts%t0 + h
+      t1     = this%opts%t0 + n*h
 
       ! Set stats of solver to zero
       this%half_explicit_stats%newt_steps_curr = 0
@@ -882,6 +880,7 @@ module half_explicit
          ! Calculate the next time $t_{n+1}$
          if (this%opts%step_size_control) then
             if ( n == 1 ) then
+               h_old  = (this%opts%te - this%opts%t0)/this%opts%nsteps
                n = this%opts%nsteps + 1
             end if
             ! always evaluate new step size $h_new$
