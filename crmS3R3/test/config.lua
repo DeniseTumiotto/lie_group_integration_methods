@@ -84,19 +84,19 @@ k_bdf = 2
 -- step_size_control = false
 
 -- Only for constrained problems
--- A = { 0.,   0.,  0.,  0., 0.,
---       1.,   0.,  0.,  0., 0.,
---      3/8,  1/8,  0.,  0., 0.,
---     -1/2, -1/2,  2.,  0., 0.,
---      1/6,  0., 2/3, 1/6, 0.,
---      1/6 - math.sqrt(3)/108,  0., 1/3 - 4*math.sqrt(3)/27,  -7*math.sqrt(3)/108, math.sqrt(3)/18}
--- c = {0., 1., 1/2, 1., 1., 0.2113}
--- d = {0., 0., 0., 1.}
--- order  = 4
--- stages = 4
--- stages_bar = 4
--- local_error_control = false
--- step_size_control = false
+A = { 0.,   0.,  0.,  0., 0.,
+      1.,   0.,  0.,  0., 0.,
+     3/8,  1/8,  0.,  0., 0.,
+    -1/2, -1/2,  2.,  0., 0.,
+     1/6,  0., 2/3, 1/6, 0.,
+     1/6 - math.sqrt(3)/108,  0., 1/3 - 4*math.sqrt(3)/27,  -7*math.sqrt(3)/108, math.sqrt(3)/18}
+c = {0., 1., 1/2, 1., 1., 0.2113}
+d = {0., 0., 0., 1.}
+order  = 4
+stages = 4
+stages_bar = 4
+local_error_control = false
+step_size_control = false
 
 -- -- Only for unconstrained problems
 -- A = { 0.,  0.,  0., 0.,
@@ -128,27 +128,27 @@ k_bdf = 2
 -- order_step_control = 4
 -- stages = 6
 -- stages_bar = 7
--- local_error_control = true
+-- local_error_control = false
 -- step_size_control = false
 
 -- -- Automatic step size control HEDOP5 (kirchhoff = 1 --> constrained)
-A = {   0.,          0.,         0.,         0.,          0.,    0., 0.,
-       1/5,          0.,         0.,         0.,          0.,    0., 0.,
-      3/40,        9/40,         0.,         0.,          0.,    0., 0.,
-     44/45,      -56/15,       32/9,         0.,          0.,    0., 0.,
-19372/6561, -25360/2187, 64448/6561,   -212/729,          0.,    0., 0.,
- 9017/3168,     -355/33, 46732/5247,     49/176, -5103/18656,    0., 0.,
-    35/384,          0.,   500/1113,    125/192,  -2187/6784, 11/84, 0.,
-    -18611506045861/19738176307200, 59332529/14479296,   -2509441598627/893904224850,    2763523204159/3289696051200,  -41262869588913/116235927142400, 46310205821/287848404480, -3280/75413}
-c = {0., 1/5, 3/10, 4/5, 8/9, 1., 1., 19/20}
-b = {5179/57600, 0., 7571/16695, 393/640, -92097/339200, 187/2100, 1/40}
-d = {0., 0., 0., 0., 0., 0., 1.}
-order  = 5
-order_step_control = 4
-stages = 6
-stages_bar = 7
-local_error_control = true
-step_size_control = true
+-- A = {   0.,          0.,         0.,         0.,          0.,    0., 0.,
+--        1/5,          0.,         0.,         0.,          0.,    0., 0.,
+--       3/40,        9/40,         0.,         0.,          0.,    0., 0.,
+--      44/45,      -56/15,       32/9,         0.,          0.,    0., 0.,
+-- 19372/6561, -25360/2187, 64448/6561,   -212/729,          0.,    0., 0.,
+--  9017/3168,     -355/33, 46732/5247,     49/176, -5103/18656,    0., 0.,
+--     35/384,          0.,   500/1113,    125/192,  -2187/6784, 11/84, 0.,
+--     -18611506045861/19738176307200, 59332529/14479296,   -2509441598627/893904224850,    2763523204159/3289696051200,  -41262869588913/116235927142400, 46310205821/287848404480, -3280/75413}
+-- c = {0., 1/5, 3/10, 4/5, 8/9, 1., 1., 19/20}
+-- b = {5179/57600, 0., 7571/16695, 393/640, -92097/339200, 187/2100, 1/40}
+-- d = {0., 0., 0., 0., 0., 0., 1.}
+-- order  = 5
+-- order_step_control = 4
+-- stages = 6
+-- stages_bar = 7
+-- local_error_control = false
+-- step_size_control = false
 
 -- Use constant mass matrix
 const_mass_matrix = 1
@@ -179,11 +179,10 @@ imax = 100
 
 -- Integration interval and step size
 t0 = 0
-te = 5
--- steps = math.ceil((te-t0)*2^[--[ 10 || 11 || 15 || 16 || 17 || 18 ]])
--- steps = te * 2^([--[ 8 || 9 || 10 || 11 || 12 || 16 ]])
+te = 1
+steps = math.ceil((te-t0)*2^[[ 9 || 10 || 11 || 12 || 13 || 18 ]])
 -- steps = 2^([--[ 5 || 6 || 7 || 8 || 9 ]])
-steps = math.ceil((te-t0)*2^10)
+-- steps = math.ceil((te-t0)*2^16)
 
 -- Variable time grid (only for flag VARIABLE_STEPS activated)
 -- note that tspan is supposed to have an extra step in order to calculate the
