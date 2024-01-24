@@ -43,8 +43,8 @@ FFLAGS := $(FFLAGS) -DNO_Z
 #-DLIN_LOG -DAPPROX_TAN_INV_T
 
 # Extra flags for the Fortran compiler (are used for the integrator, as well)
-# EXTRAFFLAGS := -O3
-EXTRAFFLAGS := -Dpure='' -ggdb3 -fbounds-check -fimplicit-none -fbacktrace -fcheck=all -finit-real=NaN
+EXTRAFFLAGS := -O3
+# EXTRAFFLAGS := -Dpure='' -ggdb3 -fbounds-check -fimplicit-none -fbacktrace -fcheck=all -finit-real=NaN
 ifdef RELAXATION
 EXTRAFFLAGS := $(EXTRAFFLAGS) -DRELAXATION
 endif

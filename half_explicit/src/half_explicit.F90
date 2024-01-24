@@ -405,7 +405,7 @@ module half_explicit
       ! internal integer variables
       integer                           :: i    ! for iteration
       integer                           :: j    ! for iteration
-      integer, dimension(this%sizev)    :: ipiv ! pivot vector for dgesv
+      integer, dimension(this%sizev+this%sizel)    :: ipiv ! pivot vector for dgesv
       integer                           :: info ! info flag for dgesv
       logical                           :: accepted_step = .true.
 
@@ -427,7 +427,7 @@ module half_explicit
       real(8), dimension(this%sizel,                 this%sizev) :: B0
       real(8), dimension(this%sizel,                 this%sizev) :: B1
       real(8), dimension(this%sizev+this%sizel, this%sizev+this%sizel) :: MBB0
-
+      
       ! calculation of step size $h$
       h = t1 - this%t
 
