@@ -76,14 +76,14 @@ k_bdf = 2
 --      2/9, 4/9,  0.,
 --      1/4,  0., 3/4}
 -- c = {0., 1/2, 2/3, 1.}
--- d = {0., -2., 3., 0.}
+-- d = {0., -2., 3.}
 -- order  = 3
 -- stages = 3
 -- stages_bar = 3
 -- local_error_control = false
 -- step_size_control = false
 
--- Only for constrained problems
+-- -- Only for constrained problems
 -- A = { 0.,   0.,  0.,  0., 0.,
 --       1.,   0.,  0.,  0., 0.,
 --      3/8,  1/8,  0.,  0., 0.,
@@ -94,7 +94,7 @@ k_bdf = 2
 -- d = {0., 0., 0., 0., 1.}
 -- order  = 4
 -- stages = 4
--- stages_bar = 4
+-- stages_bar = 5
 -- local_error_control = false
 -- step_size_control = false
 
@@ -128,7 +128,7 @@ k_bdf = 2
 -- order_step_control = 4
 -- stages = 6
 -- stages_bar = 7
--- local_error_control = true
+-- local_error_control = false
 -- step_size_control = false
 
 -- -- Automatic step size control HEDOP5 (kirchhoff = 1 --> constrained)
@@ -180,25 +180,9 @@ imax = 100
 -- Integration interval and step size
 t0 = 0
 te = 5
--- steps = te * 2^([--[ 8 || 9 || 10 || 11 || 12 || 16 ]])
--- steps = 2^([--[ 7 || 8 || 9 ]])
-steps = te * 2^10
-
--- Variable time grid (only for flag VARIABLE_STEPS activated)
--- note that tspan is supposed to have an extra step in order to calculate the
--- Lagrange multiplier in RATTLie
-tspan = {}
-regular_grid = false
-if regular_grid then
-   tspan[steps+1] = te
-   h = (te-t0)/steps
-   tspan[steps+2] = te + h
-   for i=0,steps-1 do
-      tspan[i+1] = t0 + i*h
-   end
-else
-   tspan = randgrid(t0, te, steps)
-end
+-- steps = math.ceil((te-t0)*2^[--[ 7 || 8 || 9 || 10 || 11 || 12 || 18 ]])
+-- steps = 2^([--[ 5 || 6 || 7 || 8 || 9 ]])
+steps = math.ceil((te-t0)*2^16)
 
 -- Use stabilized index-2 formulation (only applies to the constrained case)
 stab2 = 0
