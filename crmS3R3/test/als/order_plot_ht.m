@@ -1,4 +1,4 @@
-function order_plot(sol2, sol1)
+function order_plot_ht(sol2, sol1)
 
 h = sol2(:, 1);
 

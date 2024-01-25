@@ -1,10 +1,36 @@
-function visualize_beam(sol)
+function visualize_beam(sol, varargin)
 
-make_video = false;
+if nargin < 1
+    error('Not enough arguments!')
+else
+    for j = 2:2:nargin
+        switch lower(varargin{j-1})
+            case {'video'}
+                make_video = varargin{j};
+            % case {'view'}
+            %     set_view = varargin{j};            
+            case {'see edges', 'edges', 'edge'}
+                do_edges = varargin{j};
+            case {'step'}
+                ts = varargin{j};
+            otherwise
+                warning(['parameter ''' varargin{j-1} ''' not recognized']);
+        end
+    end
+end
+if ~exist('make_video','var')
+    make_video = false;
+end
+% if ~exist('set_view','var')
+%     set_view = false;
+% end
+if ~exist('do_edges','var')
+    do_edges = false;
+end
+if ~exist('ts','var')
+    ts =  ceil(length(sol.rslt.t)/50);
+end
 
-set_view = false;
-
-do_edges = false;
 
 if make_video
    vid = VideoWriter('out.avi');
@@ -13,7 +39,15 @@ end
 
 [~, xs] = q_to_ps_xs(sol.rslt.q(:,1), sol);
 
-figure('outerposition',[0 0 1024 768]);
+figure();
+
+if strcmp(sol.problem_name,'roll-up')
+    view([0 -1 0])
+elseif strcmp(sol.problem_name,'flying_spaghetti')
+    view([49, 15])
+else
+    view(2)
+end
 
 hold on;
 plt = plot3(xs(1,:),xs(2,:),xs(3,:),'-o');
@@ -37,15 +71,10 @@ plt.Parent.ZLim = [min(min(sol.rslt.q(7:7:end,:)))-1,...
                    max(max(sol.rslt.q(7:7:end,:)))+1];
 
 
-view1 = [-15, 89];                
-%view2 = view1;
-view2 = [ 15,   0];
-                
-%plt.Parent.XLim = [min(xs(1,:))-1, max(xs(1,:))+1];
-%plt.Parent.YLim = [min(xs(2,:))-1, max(xs(2,:))+1];
-%plt.Parent.ZLim = [min(xs(3,:))-1, max(xs(3,:))+1];
+% view1 = [-15, 89];
+% view2 = [ 15,  0];
 
-for ii = 1:2:length(sol.rslt.t)
+for ii = 1:ts:length(sol.rslt.t)
    [~, xs] = q_to_ps_xs(sol.rslt.q(:,ii), sol);
    
    plt.XData = xs(1,:);
@@ -62,14 +91,10 @@ for ii = 1:2:length(sol.rslt.t)
       lin2.ZData = [lin2.ZData,xs(3,end)];
    end
    
-   %plt.Parent.XLim = [min(xs(1,:))-1, max(xs(1,:))+1];
-   %plt.Parent.YLim = [min(xs(2,:))-1, max(xs(2,:))+1];
-   %plt.Parent.ZLim = [min(xs(3,:))-1, max(xs(3,:))+1];
-   
-   par = (ii-1)/(length(sol.rslt.t)-1);
-   if set_view
-      view(view2*par + (1-par)*view1);
-   end
+   % par = (ii-1)/(length(sol.rslt.t)-1);
+   % if set_view
+   %    view(view2*par + (1-par)*view1);
+   % end
    
    title(['t = ' sprintf('%-10.5f',sol.rslt.t(ii))]);
    
