@@ -13,6 +13,8 @@ else
                 separate = varargin{j};
             case {'combine','subplots'}
                 combine = varargin{j};
+            case {'constant_step'}
+                const = 1;
             otherwise
                 warning(['parameter ''' varargin{j-1} ''' not recognized']);
         end
@@ -30,6 +32,9 @@ if ~exist('separate','var')
 end
 if ~exist('combine','var')
     combine = 1;
+end
+if ~exist('const','var')
+    const = 0;
 end
 
 the_size = max(size(sols));
@@ -57,7 +62,7 @@ for i = 1:the_size
         subplot(2,1,1)
     end
     plot(time_interval, sols{i}.rslt.local_err(2:j),...
-        'LineWidth',1.5,'DisplayName',my_problem,'Color',colors(2*i,:))
+        'LineWidth',1.5,'DisplayName',my_problem,'Color',colors(i,:))
     hold on
     title('\textbf{Variable} \textit{err} \textbf{for accepted time steps}',...
         'FontSize',14,'Interpreter','latex')
@@ -71,7 +76,7 @@ for i = 1:the_size
     if separate
         legend()
     end
-
+    if ~const
     if separate && ~combine
         figure(i + the_size)
     elseif separate && combine
@@ -80,7 +85,7 @@ for i = 1:the_size
         subplot(2,1,2)
     end
     plot(time_interval,sols{i}.h(1:j-1),...
-        'LineWidth',1.5,'DisplayName',my_problem,'Color',colors(2*i,:))
+        'LineWidth',1.5,'DisplayName',my_problem,'Color',colors(i,:))
     hold on
     title('\textbf{Time step size}',...
         'FontSize',14,'Interpreter','latex')
@@ -92,7 +97,7 @@ for i = 1:the_size
         'FontSize',14,'Interpreter','latex')
 
     legend()
-
+    end
 end
 
 end

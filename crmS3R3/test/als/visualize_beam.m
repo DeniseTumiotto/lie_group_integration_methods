@@ -6,9 +6,7 @@ else
     for j = 2:2:nargin
         switch lower(varargin{j-1})
             case {'video'}
-                make_video = varargin{j};
-            % case {'view'}
-            %     set_view = varargin{j};            
+                make_video = varargin{j};          
             case {'see edges', 'edges', 'edge'}
                 do_edges = varargin{j};
             case {'step'}
@@ -21,13 +19,10 @@ end
 if ~exist('make_video','var')
     make_video = false;
 end
-% if ~exist('set_view','var')
-%     set_view = false;
-% end
 if ~exist('do_edges','var')
     do_edges = false;
 end
-if ~exist('ts','var')
+if ~exist('ts','var') || isempty(ts)
     ts =  ceil(length(sol.rslt.t)/50);
 end
 
@@ -70,10 +65,6 @@ plt.Parent.YLim = [min(min(sol.rslt.q(6:7:end,:)))-1,...
 plt.Parent.ZLim = [min(min(sol.rslt.q(7:7:end,:)))-1,...
                    max(max(sol.rslt.q(7:7:end,:)))+1];
 
-
-% view1 = [-15, 89];
-% view2 = [ 15,  0];
-
 for ii = 1:ts:length(sol.rslt.t)
    [~, xs] = q_to_ps_xs(sol.rslt.q(:,ii), sol);
    
@@ -90,11 +81,6 @@ for ii = 1:ts:length(sol.rslt.t)
       lin2.YData = [lin2.YData,xs(2,end)];
       lin2.ZData = [lin2.ZData,xs(3,end)];
    end
-   
-   % par = (ii-1)/(length(sol.rslt.t)-1);
-   % if set_view
-   %    view(view2*par + (1-par)*view1);
-   % end
    
    title(['t = ' sprintf('%-10.5f',sol.rslt.t(ii))]);
    

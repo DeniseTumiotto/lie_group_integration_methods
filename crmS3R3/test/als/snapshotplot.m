@@ -13,8 +13,6 @@ else
                 stride = varargin{j};            
             case {'color','bw'}
                 bw = varargin{j};
-            case {'time'}
-                ts = varargin{j};
             otherwise
                 warning(['parameter ''' varargin{j-1} ''' not recognized']);
         end
@@ -30,9 +28,8 @@ end
 if ~exist('bw','var')
     bw = 0;
 end
-if ~exist('ts','var')
-    ts =  sol.rslt.t(1:ceil(length(sol.rslt.t)/stride):end);
-end
+
+ts =  sol.rslt.t(1:ceil(length(sol.rslt.t)/stride):end);
 
 if traj_extr
     if sol.fixed_x0 == 0 && sol.fixed_p0 == 0
