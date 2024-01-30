@@ -26,6 +26,9 @@ colors = linspecer(5);
 the_style = {'-';'-.';':'};
 
 for i = 1:the_size
+    if sols{i}.err.abs.q == 0
+        continue
+    end
     if exist('n_figure','var')
         figure(n_figure)
         if side
@@ -382,7 +385,7 @@ for i = 1:the_size
                             if ~exist('pl_rll','var')
                                 pl_rll = {[], [], [], []};
                             end
-                            pl_rll{sols{i}.order} = loglog(sols{i}.h,sols{i}.err.abs.(my_var),...
+                            pl_rll{sols{i}.order - 1} = loglog(sols{i}.h,sols{i}.err.abs.(my_var),...
                                 'Color',colors( - 1 + sols{i}.order,:),'LineWidth',1.5,'DisplayName',['p = ' num2str(sols{i}.order) ]);
                         end
                     case 'flying_spaghetti'

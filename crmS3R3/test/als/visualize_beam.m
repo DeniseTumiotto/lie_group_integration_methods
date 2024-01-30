@@ -28,7 +28,9 @@ end
 
 
 if make_video
-   vid = VideoWriter('out.avi');
+   vid_name = string(datetime("now","Format","uuuuMMdd'T'HHmmss"));
+   vid = VideoWriter(strcat(sol.problem_name,vid_name,'.avi'),'Motion JPEG AVI');
+   vid.Quality = 100;
    open(vid);
 end
 
