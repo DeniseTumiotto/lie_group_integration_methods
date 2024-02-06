@@ -56,7 +56,8 @@ for it=1:stride
 
    % Plot
    plot3(xs(1,:), xs(2,:), xs(3,:), '-o', 'MarkerSize',5, 'LineWidth',3, ...
-         'DisplayName', sprintf('t=%.1f s', t), 'Color', color(end-(it-1),:));
+         'DisplayName', sprintf('t=%.1f s', t),'MarkerFaceColor', color(end-(it-1),:),...
+         'Color', color(end-(it-1),:));
 end
 ax=gca;
 ax.FontSize = 16;
@@ -64,7 +65,7 @@ ax.FontSize = 16;
 if strcmp(sol.problem_name,'roll-up')
     view([0 -1 0])
 elseif strcmp(sol.problem_name,'flying_spaghetti')
-    view([75 30])
+    view([22.103969891487075,21.233658241582319])
 else
     view(2)
 end

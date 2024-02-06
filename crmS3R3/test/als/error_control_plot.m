@@ -15,12 +15,14 @@ else
                 combine = varargin{j};
             case {'constant_step'}
                 const = 1;
+            case {'side'}
+                side = varargin{j};
             otherwise
                 warning(['parameter ''' varargin{j-1} ''' not recognized']);
         end
     end
 end
-
+%TODO : side by side plots
 if ~exist('the_name','var')
     the_name = 'problem_name';
 end
@@ -35,6 +37,9 @@ if ~exist('combine','var')
 end
 if ~exist('const','var')
     const = 0;
+end
+if ~exist('side','var')
+    side = 0;
 end
 
 the_size = max(size(sols));
