@@ -135,7 +135,7 @@ module testprobcrm
          !
          if (this%fixed_p0 == 1) then
             p(:,1) = this%fixed_p0_orientation
-            point = point
+            ! point = point
          else
             p(:,1) = q(1:4)
             point = point + 4
@@ -143,7 +143,7 @@ module testprobcrm
          !
          if (this%fixed_x0 == 1) then
             x(:,1) = this%fixed_x0_position
-            point = point
+            ! point = point
          else
             x(:,1) = q(5:7)
             point = point + 3
@@ -184,7 +184,7 @@ module testprobcrm
          !
          if (this%fixed_p0 == 1) then
             Om(:,1) = 0.0_8
-            point = point
+            ! point = point
          else
             Om(:,1) = v(1:3)
             point = point + 3
@@ -192,7 +192,7 @@ module testprobcrm
          !
          if (this%fixed_x0 == 1) then
             cV(:,1) = 0.0_8 ! Derivative of the constant this%fixed_x0_position
-            point = point
+            ! point = point
          else
             cV(:,1) = v(4:6)
             point = point + 3
@@ -832,7 +832,7 @@ module testprobcrm
                end if
             end if
             tmpv = &
-#if !defined(INT_RATTLie) && !defined(INT_SHAKELie) && !defined(INT_varint4lie)
+#if !defined(INT_RATTLie) && !defined(INT_SHAKELie) && !defined(INT_varint4lie) && !defined(INT_half_explicit)
                hat_tr_mult_s3sdr3(tmpv, dsscrM*tmpv/2)  &
 #endif
                + tan_tr_inv_mult_s3sdr3(-ds*w(1:6), scrC*(w(1:6) - majE) + 2*scrCd*wd(1:6))
@@ -855,7 +855,7 @@ module testprobcrm
             ! Right hand side for v_k
             for(i,1,this%n-1)
                rslt(6*i-r+1:6*i-r+6) = &
-#if !defined(INT_RATTLie) && !defined(INT_SHAKELie) && !defined(INT_varint4lie)
+#if !defined(INT_RATTLie) && !defined(INT_SHAKELie) && !defined(INT_varint4lie) && !defined(INT_half_explicit)
                   hat_tr_mult_s3sdr3(v(6*i-r+1:6*i-r+6), dsscrM*v(6*i-r+1:6*i-r+6))   &
 #endif
                    + tan_tr_inv_mult_s3sdr3(-ds*w(6*i+1:6*i+6), scrC*(w(6*i+1:6*i+6) - majE) + 2*scrCd*wd(6*i+1:6*i+6)) &
@@ -881,7 +881,7 @@ module testprobcrm
                end if
             end if
             tmpv = &
-#if !defined(INT_RATTLie) && !defined(INT_SHAKELie) && !defined(INT_varint4lie)
+#if !defined(INT_RATTLie) && !defined(INT_SHAKELie) && !defined(INT_varint4lie) && !defined(INT_half_explicit)
                hat_tr_mult_s3sdr3(tmpv, dsscrM*tmpv/2)   &
 #endif
                 - tan_tr_inv_mult_s3sdr3( ds*w(6*i-5:6*i ), scrC*(w(6*i-5:6*i  ) - majE) + 2*scrCd*wd(6*i-5:6*i  ))
