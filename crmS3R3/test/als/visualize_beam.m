@@ -1,32 +1,65 @@
-function visualize_beam(sol)
+function visualize_beam(sol, varargin)
 
-make_video = false;
+if nargin < 1
+    error('Not enough arguments!')
+else
+    for j = 2:2:nargin
+        switch lower(varargin{j-1})
+            case {'video'}
+                make_video = varargin{j};          
+            case {'see edges', 'edges', 'edge'}
+                do_edges = varargin{j};
+            case {'steps'}
+                ts = ceil(length(sol.rslt.t)/varargin{j});
+                steps = varargin{j};
+            otherwise
+                warning(['parameter ''' varargin{j-1} ''' not recognized']);
+        end
+    end
+end
+if ~exist('make_video','var')
+    make_video = false;
+end
+if ~exist('do_edges','var')
+    do_edges = false;
+end
+if ~exist('ts','var') || isempty(ts)
+    ts =  ceil(length(sol.rslt.t)/50);
+    steps = 50;
+end
 
-set_view = false;
-
-do_edges = false;
 
 if make_video
-   vid = VideoWriter('out.avi');
+   vid_name = string(datetime("now","Format","uuuuMMdd'T'HHmmss"));
+   vid = VideoWriter(strcat(sol.problem_name,vid_name,'.mp4'),'MPEG-4');
    open(vid);
 end
 
 [~, xs] = q_to_ps_xs(sol.rslt.q(:,1), sol);
 
-figure('outerposition',[0 0 1024 768]);
+figure();
+
+if strcmp(sol.problem_name,'roll-up')
+    view([0 -1 0])
+elseif strcmp(sol.problem_name,'flying_spaghetti')
+    view([49, 15])
+else
+    view(2)
+end
 
 hold on;
-plt = plot3(xs(1,:),xs(2,:),xs(3,:),'-o');
+plt = plot3(xs(1,:),xs(2,:),xs(3,:),'-o','LineWidth',1.5,'MarkerFaceColor','auto');
 if do_edges
-   lin1 = plot3(xs(1,1),xs(2,1),xs(3,1),'-r');
-   lin2 = plot3(xs(1,end),xs(2,end),xs(3,end),'-r');
+   lin1 = plot3(xs(1,1),xs(2,1),xs(3,1),'-r','LineWidth',1.5);
+   lin2 = plot3(xs(1,end),xs(2,end),xs(3,end),'-r','LineWidth',1.5);
 end
+axis off;
 axis equal;
 grid off;
-grid on;
-xlabel('x');
-ylabel('y');
-zlabel('z');
+% grid on;
+% xlabel('x');
+% ylabel('y');
+% zlabel('z');
 title(['t = ' num2str(sol.rslt.t(:,1))]);
 
 plt.Parent.XLim = [min(min(sol.rslt.q(5:7:end,:)))-1,...
@@ -35,22 +68,18 @@ plt.Parent.YLim = [min(min(sol.rslt.q(6:7:end,:)))-1,...
                    max(max(sol.rslt.q(6:7:end,:)))+1];
 plt.Parent.ZLim = [min(min(sol.rslt.q(7:7:end,:)))-1,...
                    max(max(sol.rslt.q(7:7:end,:)))+1];
+my_color = colormap;
+j = 1;
 
-
-view1 = [-15, 89];                
-%view2 = view1;
-view2 = [ 15,   0];
-                
-%plt.Parent.XLim = [min(xs(1,:))-1, max(xs(1,:))+1];
-%plt.Parent.YLim = [min(xs(2,:))-1, max(xs(2,:))+1];
-%plt.Parent.ZLim = [min(xs(3,:))-1, max(xs(3,:))+1];
-
-for ii = 1:2:length(sol.rslt.t)
+for ii = 1:ts:length(sol.rslt.t)
    [~, xs] = q_to_ps_xs(sol.rslt.q(:,ii), sol);
    
    plt.XData = xs(1,:);
    plt.YData = xs(2,:);
    plt.ZData = xs(3,:);
+   plt.Color = my_color(j,:);
+   plt.MarkerFaceColor = my_color(j,:);
+   j = j + floor(256/steps);
    
    if do_edges
       lin1.XData = [lin1.XData,xs(1,1)];
@@ -60,15 +89,6 @@ for ii = 1:2:length(sol.rslt.t)
       lin2.XData = [lin2.XData,xs(1,end)];
       lin2.YData = [lin2.YData,xs(2,end)];
       lin2.ZData = [lin2.ZData,xs(3,end)];
-   end
-   
-   %plt.Parent.XLim = [min(xs(1,:))-1, max(xs(1,:))+1];
-   %plt.Parent.YLim = [min(xs(2,:))-1, max(xs(2,:))+1];
-   %plt.Parent.ZLim = [min(xs(3,:))-1, max(xs(3,:))+1];
-   
-   par = (ii-1)/(length(sol.rslt.t)-1);
-   if set_view
-      view(view2*par + (1-par)*view1);
    end
    
    title(['t = ' sprintf('%-10.5f',sol.rslt.t(ii))]);

@@ -1,39 +1,53 @@
-function snapshotplot(sol, traj_extr, stride, bw, ts)
+function snapshotplot(sol, varargin)
 figure()
 hold on;
 
-if nargin < 5
-    if nargin < 4
-        bw = 0;
-        if nargin < 3
-            stride = 8;
-            if nargin < 2
-                traj_extr = 0;
-            end
+if nargin < 1
+    error('Not enough arguments!')
+else
+    for j = 2:2:nargin
+        switch lower(varargin{j-1})
+            case {'extreme','extr traj'}
+                traj_extr = varargin{j};
+            case {'stride','number'}
+                stride = varargin{j};            
+            case {'color','bw'}
+                bw = varargin{j};
+            otherwise
+                warning(['parameter ''' varargin{j-1} ''' not recognized']);
         end
     end
-   ts =  linspace(0, sol.te, stride);
 end
+
+if ~exist('traj_extr','var')
+    traj_extr = 0;
+end
+if ~exist('stride','var')
+    stride = 8;
+end
+if ~exist('bw','var')
+    bw = 0;
+end
+
+ts =  sol.rslt.t(1:ceil(length(sol.rslt.t)/stride):end);
 
 if traj_extr
     if sol.fixed_x0 == 0 && sol.fixed_p0 == 0
        plot3(sol.rslt.q(5,1:stride:end), sol.rslt.q(6,1:stride:end), sol.rslt.q(7,1:stride:end),...
-           ':k', 'LineWidth',2,'DisplayName','trajectory left end');
+           ':k', 'LineWidth',2,'DisplayName','Trajectory left end');
     end
     if sol.fixed_xn == 0 && sol.fixed_pn == 0
        plot3(sol.rslt.q(end-2,1:stride:end), sol.rslt.q(end-1,1:stride:end), sol.rslt.q(end,1:stride:end),...
-           ':k', 'LineWidth',2,'DisplayName','trajectory right end');
+           ':k', 'LineWidth',2,'DisplayName','Trajectory right end');
     end
 end
 
-N = length(ts);
 if bw
-    color = linspecer(N+3,'gray');
+    color = linspecer(stride+3,'gray');
 else
-    color = linspecer(N);
+    color = linspecer(stride);
 end
-for it=1:N
-   % t = sol.rslt.t(it);
+for it=1:stride
    t = ts(it);
 
    % Minimal index
@@ -42,10 +56,19 @@ for it=1:N
 
    % Plot
    plot3(xs(1,:), xs(2,:), xs(3,:), '-o', 'MarkerSize',5, 'LineWidth',3, ...
-         'DisplayName', sprintf('t=%.1f s', t), 'Color', color(end-(it-1),:));
+         'DisplayName', sprintf('t=%.1f s', t),'MarkerFaceColor', color(end-(it-1),:),...
+         'Color', color(end-(it-1),:));
 end
 ax=gca;
 ax.FontSize = 16;
+
+if strcmp(sol.problem_name,'roll-up')
+    view([0 -1 0])
+elseif strcmp(sol.problem_name,'flying_spaghetti')
+    view([22.103969891487075,21.233658241582319])
+else
+    view(2)
+end
 
 legend('FontSize', 16, 'Location','best');
 xlabel('x', 'FontSize', 24);
@@ -55,8 +78,7 @@ zlabel('z', 'FontSize', 24);
 grid off;
 grid on;
 
-% axis equal;
-% axis tight;
+end
 
 function [ps, xs] = q_to_ps_xs(q,sol)
 
@@ -100,4 +122,5 @@ else
    tmp = reshape(q,[7,length(sol.output_s)]);
    ps = tmp(1:4,:);
    xs = tmp(5:7,:);
+end
 end

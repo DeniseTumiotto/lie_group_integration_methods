@@ -1,22 +1,51 @@
-function error_control_plot(sols, combine, separate, t_end, the_name)
+function error_control_plot(sols, varargin)
 
-if nargin < 5
-    the_name = 'problem_name';
-    if nargin < 4
-        t_end = 1e7;
-        if nargin < 3
-            separate = 0;
-            if nargin < 2
-                combine = 0;
-            end
+if nargin < 1
+    error('Not enough arguments!')
+else
+    for j = 2:2:nargin
+        switch lower(varargin{j-1})
+            case {'name'}
+                the_name = varargin{j};
+            case {'end time'}
+                t_end = varargin{j};            
+            case {'separate','alone'}
+                separate = varargin{j};
+            case {'combine','subplots'}
+                combine = varargin{j};
+            case {'constant_step'}
+                const = 1;
+            case {'side'}
+                side = varargin{j};
+            otherwise
+                warning(['parameter ''' varargin{j-1} ''' not recognized']);
         end
     end
 end
+%TODO : side by side plots
+if ~exist('the_name','var')
+    the_name = 'problem_name';
+end
+if ~exist('t_end','var')
+    t_end = 1e7;
+end
+if ~exist('separate','var')
+    separate = 0;
+end
+if ~exist('combine','var')
+    combine = 1;
+end
+if ~exist('const','var')
+    const = 0;
+end
+if ~exist('side','var')
+    side = 0;
+end
 
-the_size = size(sols);
-colors = linspecer(max(the_size)+1);
+the_size = max(size(sols));
+colors = linspecer(the_size+1);
 
-for i = 1:max(the_size)
+for i = 1:the_size
     n_t = max(size(sols{i}.rslt.t));
     for j = 1:n_t
         if sols{i}.rslt.t(j) > t_end
@@ -38,7 +67,7 @@ for i = 1:max(the_size)
         subplot(2,1,1)
     end
     plot(time_interval, sols{i}.rslt.local_err(2:j),...
-        'LineWidth',1.5,'DisplayName',my_problem,'Color',colors(2*i,:))
+        'LineWidth',1.5,'DisplayName',my_problem,'Color',colors(i,:))
     hold on
     title('\textbf{Variable} \textit{err} \textbf{for accepted time steps}',...
         'FontSize',14,'Interpreter','latex')
@@ -52,16 +81,16 @@ for i = 1:max(the_size)
     if separate
         legend()
     end
-
+    if ~const
     if separate && ~combine
-        figure(i + max(the_size))
+        figure(i + the_size)
     elseif separate && combine
         figure(2)
     else
         subplot(2,1,2)
     end
     plot(time_interval,sols{i}.h(1:j-1),...
-        'LineWidth',1.5,'DisplayName',my_problem,'Color',colors(2*i,:))
+        'LineWidth',1.5,'DisplayName',my_problem,'Color',colors(i,:))
     hold on
     title('\textbf{Time step size}',...
         'FontSize',14,'Interpreter','latex')
@@ -73,7 +102,7 @@ for i = 1:max(the_size)
         'FontSize',14,'Interpreter','latex')
 
     legend()
-
+    end
 end
 
 end
