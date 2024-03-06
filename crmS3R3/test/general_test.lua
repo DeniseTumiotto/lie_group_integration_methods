@@ -147,8 +147,8 @@ order  = 5
 order_step_control = 4
 stages = 6
 stages_bar = 7
-local_error_control = false
-step_size_control = false
+local_error_control = true
+step_size_control = true
 
 -- Use constant mass matrix
 const_mass_matrix = 1
@@ -179,14 +179,15 @@ imax = 100
 
 -- Integration interval and step size
 t0 = 0
-te = 10
+te = 5
 -- steps = math.ceil((te-t0)*2^[--[ 7 || 8 || 9 || 10 || 11 || 12 || 18 ]])
 -- steps = 2^([--[ 5 || 6 || 7 || 8 || 9 ]])
-steps = math.ceil((te-t0)*2^10)
+steps = math.ceil((te-t0)*2^16)
 
 -- Use stabilized index-2 formulation (only applies to the constrained case)
 stab2 = 0
 
+[[
 -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- --
 -- -- -- Problem options   -- -- -- -- -- -- -- -- -- -- -- --
 -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- --
@@ -195,16 +196,16 @@ problem_name = 'roll-up'
 -- Kirchhoff model
 kirchhoff =  1
 ---- inextensible model
-inextensible = 0
+--inextensible = 0
 
 -- Calculate number of subdiagonals and superdiagonals of the iteration matrix
 additional_subdiag = 0
 if kirchhoff then
    additional_subdiag = 2
 end
-if inextensible then
-  additional_subdiag = additional_subdiag + 1
-end
+--if inextensible then
+--   additional_subdiag = additional_subdiag + 1
+--end
 if stab2 then
    additional_subdiag = 2*additional_subdiag
 end
@@ -292,6 +293,7 @@ function Om0(s)
    return {0,0,0}
 end
 
+
 -- External forces and moments
 
 --external = 'flying_spaghetti'
@@ -326,6 +328,136 @@ fixed_p0 = 1
 fixed_p0_orientation = p0(0)
 fixed_pn = 0
 fixed_pn_orientation = p0(1)
+
+||
+
+-- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- --
+-- -- -- Problem options   -- -- -- -- -- -- -- -- -- -- -- --
+-- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- --
+problem_name = 'flying_spaghetti'
+
+-- Kirchhoff model
+kirchhoff = 1
+---- inextensible model
+--inextensible = 0
+
+-- Calculate number of subdiagonals and superdiagonals of the iteration matrix
+additional_subdiag = 0
+if kirchhoff then
+   additional_subdiag = 2
+end
+--if inextensible then
+--   additional_subdiag = additional_subdiag + 1
+--end
+if stab2 then
+   additional_subdiag = 2*additional_subdiag
+end
+-- In the unconstrained case there are 11 subdiagonals
+nr_subdiag = 11 + additional_subdiag
+-- The number of sub- and superdiagonals is equal
+nr_superdiag = nr_subdiag
+
+-- Number of discretization points minus one (since we have q_0,..,q_n)
+n = 16
+
+-- Length
+L = 10
+
+-- Dissipative material constants
+CGamd = { 0.0,
+          0.0,
+          0.0 }
+CKd = { 0.0,
+        0.0,
+        0.0 }
+-- Material properties
+-- CGam = [ GA, GA, EA ]
+CGam = { 1.0e4,
+         1.0e4,
+         1.0e4 }
+-- CK = [ EI, EI, GI ]
+CK   = { 5.0e2,
+         5.0e2,
+         5.0e2 }
+-- Difference between two discretization points
+ds = L/n
+-- Mass of beam segment
+-- m = A*rho * ds
+m = 1.0 * ds
+-- Inertial mass of a beam segment
+-- mI = iner * rho * ds
+mI = { 10.0 * ds,
+       10.0 * ds,
+       10.0 * ds }
+
+-- -- -- Initial values -- -- --
+-- Note that  0 <= s <= 1, independent of the beam length
+-- Initial positions
+function x0(s)
+   return { 6.0 * (1.0 - s),
+            8.0 * s,
+            0.0 }
+end
+-- Initial velocities
+function V0(s)
+   return {0,0,0}
+end
+
+-- Helper functions
+function cross(x,y)
+   return { x[2]*y[3] - x[3]*y[2],
+            x[3]*y[1] - x[1]*y[3],
+            x[1]*y[2] - x[2]*y[1] }
+end
+
+function normalize(x)
+   local norm = 0
+   for i = 1, #x do
+      norm = norm + x[i]*x[i]
+   end
+   norm = math.sqrt(norm)
+   for i = 1, #x do
+      x[i] = x[i]/norm
+   end
+   return x
+end
+
+-- Initial rotations
+function p0(s)
+   local v = normalize(cross({0, 0, 1},{-6, 8, 0}))
+   return {    1/math.sqrt(2),
+            v[1]/math.sqrt(2),
+            v[2]/math.sqrt(2),
+            v[3]/math.sqrt(2) }
+end
+-- Initial angular velocities
+function Om0(s)
+   return { 0, 0, 0 }
+end
+
+-- External forces and moments
+external = 'flying_spaghetti'
+external_parameters = {
+   increasing_time = 2.5,
+   decreasing_time = 2.5,
+   maximum_height  = 200,
+   force_factors = {1/10, 0, 0},
+   moment_factors = {0, -1/2, -1}
+}
+
+-- Fixing
+fixed_x0 = 0
+fixed_x0_position = x0(0)
+fixed_xn = 0
+fixed_xn_position = x0(1)
+
+-- Fixing
+fixed_p0 = 0
+fixed_p0_orientation = p0(0)
+fixed_pn = 0
+fixed_pn_orientation = p0(1)
+
+]]
 
 -- -- -- Output options -- -- --
 output_t_at = 0

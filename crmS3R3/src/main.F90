@@ -273,13 +273,13 @@ program main
    call error_check(conf, iError, 'kirchhoff')
    print *, 'kirchhoff = ', prob%kirchhoff
 
-!   call aot_get_val(L = conf, key = 'inextensible', val = prob%inextensible, ErrCode = iError)
-!   call error_check(conf, iError, 'inextensible')
-!   print *, 'inextensible = ', prob%inextensible
+  call aot_get_val(L = conf, key = 'inextensible', val = prob%inextensible, ErrCode = iError)
+  call error_check(conf, iError, 'inextensible')
+  print *, 'inextensible = ', prob%inextensible
 !
    ! Constrained problem if we use a Kirchhoff or inextensible beam model
-!   if (prob%inextensible == 1 .or. prob%kirchhoff == 1) then
-   if (prob%kirchhoff == 1) then
+   if (prob%inextensible == 1 .or. prob%kirchhoff == 1) then
+   ! if (prob%kirchhoff == 1) then
       prob%opts%constrained = 1
    else
       prob%opts%constrained = 0
