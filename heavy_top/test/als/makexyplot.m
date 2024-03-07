@@ -1,17 +1,18 @@
-function makexyplot(solcell, pattern, xname, yname, byname, varargin)
+function makexyplot(solcell, pattern, xname, ynames, varargin)
 
 
 % Only keep sols that match the pattern
 sc = filter_solcell(solcell,pattern);
 
 % Create beginning of title name (also used for figure name)
-titlename = [yname '!over!' xname];
-
-% Get number of lines and their legend data
-if ~isempty(byname)
-   bydata = unique(catsolcell(sc, byname));
-   titlename = [titlename '!by!' byname];
+titlename = '';
+for k=1:length(ynames)
+   titlename = [titlename ynames{k}];
+   if not(k==length(ynames))
+      titlename = [titlename ',!'];
+   end
 end
+titlename = [titlename '!over!' xname];
 
 % Create pattern name
 if ~isempty(pattern)
@@ -35,45 +36,54 @@ ax.YScale = 'log';
 markerlist = 'ox+pd';
 
 % Create plots
-if ~isempty(byname)
-   hold(ax,'on');
-   for k=1:length(bydata)
-      bysc = filter_solcell(sc, struct(byname,bydata(k)));
-      [xdata,sortind] = sort(catsolcell(bysc, xname));
-      ydata = catsolcell(bysc, yname);
-      ydata = ydata(sortind);
+hold(ax,'on');
+N = length(ynames);
+color = linspecer(N+1);
+for k=1:N
+   [xdata,sortind] = sort(catsolcell(sc, xname));
+   ydata = catsolcell(sc, ynames{k});
+   ydata = ydata(sortind);
 
-      loglog(ax, xdata, ydata, ['-' markerlist(mod(k-1,length(markerlist))+1)], varargin{:});
-
-      legendstr{k} = [byname '=' num2str(bydata(k))];
-   end
-
-   legend(legendstr,'interpreter','none');
-   legend('Location','Best');
-else
-   xdata = catsolcell(sc, xname);
-   ydata = catsolcell(sc, yname);
-
-   plot(ax, xdata, ydata, varargin{:});
+   loglog(ax, xdata, ydata, ['-' markerlist(mod(k-1,length(markerlist))+1)], 'MarkerSize',5,...
+       'LineWidth',2,'Color',color(end-(k-1),:),'DisplayName',ynames{k}(end));
+end
+if nargin > 4
+    switch varargin{1}
+        case 1
+            loglog(ax, xdata, xdata   *((ydata(2))/xdata(2)  ), 'k:', 'LineWidth',2,'DisplayName','1^{st} order');
+        case 2
+            loglog(ax, xdata, xdata.^2*((ydata(2))/xdata(2)^2), 'k:', 'LineWidth',2,'DisplayName','2^{nd} order');
+        case 3
+            loglog(ax, xdata, xdata.^3*((ydata(2))/xdata(2)^3), 'k:', 'LineWidth',2,'DisplayName','3^{rd} order');
+        case 4
+            loglog(ax, xdata, xdata.^4*((ydata(2))/xdata(2)^4), 'k:', 'LineWidth',2,'DisplayName','4^{th} order');
+        case 5
+            loglog(ax, xdata, xdata.^5*((ydata(2))/xdata(2)^5), 'k:', 'LineWidth',2,'DisplayName','5^{th} order');
+        otherwise
+            disp('Order not available')
+    end
 end
 
+
+ax=gca;
+ax.FontSize = 16;
+
+% legend(ynames,'interpreter','none','FontSize',16);
+legend('FontSize',20);
+legend('Location','Best');
+
 % Optical things
-title(strrep(strrep(titlename,'!!',', '),'!',' '),'interpreter','none');
-xlabel(xname,'interpreter','none');
-ylabel(yname,'interpreter','none');
+% title(strrep(strrep(titlename,'!!',', '),'!',' '),'interpreter','none','FontSize',20);
+if strcmp(ynames{1}(1:7), 'err.abs')
+    title('Absolute error vs time step size','FontSize',20);
+    ylabel('Absolute Error','interpreter','none','FontSize',20);
+elseif strcmp(ynames{1}(1:7), 'err.rel')
+    title('Relative error vs time step size','FontSize',20);
+    ylabel('Relative Error','interpreter','none','FontSize',20);
+else
+    disp('Plot not known!')
+end
+xlabel(xname,'interpreter','none','FontSize',20);
 
 grid off;
 grid on;
-
-
-% function sc = filter_solcell(solcell,pattern)
-% if ~isempty(pattern)
-%    sc = cell(1,0);
-%    for k=1:length(solcell)
-%       if structmatch(solcell{k}, pattern)
-%          sc{end+1} = solcell{k};
-%       end
-%    end
-% else
-%    sc = solcell;
-% end

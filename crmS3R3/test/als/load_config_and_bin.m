@@ -97,7 +97,7 @@ out = readLua(luafname, ...
       out.(f{j}) = intopts.(f{j});
    end
 catch ME
-   warning(['Error reading Lua file, skipping' char(10) ME.message]);
+   warning(['Error reading Lua file, skipping' newline ME.message]);
    out = [];
    matched = false;
    return;
@@ -145,7 +145,7 @@ if (out.output_s_at == 1)
       sizel = sizel + 2*length(out.output_s);
    end
   if out.inextensible == 1
-     sizel = sizel + length(out.s_output_p);
+     sizel = sizel + length(out.output_s);
   end
    sizebin1 = 1 + sizeq + (1+has_vd)*sizev + sizel;
    if (out.stab2 == 1)

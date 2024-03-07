@@ -78,12 +78,6 @@ out = readLua(luafname, ...
       out.(f{j}) = intopts.(f{j});
    end
 
-if isempty(out.alpha_m)
-   warning([luafname ' has no alpha_m, so it''s probably empty or corrupted. Skipping']);
-   matched = false;
-   return;
-end
-
 if nargin >= 2 && ~structmatch(out, pattern)
    matched = false;
    return;
@@ -94,6 +88,15 @@ end
 if nargin >= 3 && strcmp(only_conf,'only_conf')
    return;
 end
+
+% Load statistics from lua file
+out.stats = readLua(luafname, ...
+                    {'cpu_time',...
+                     'newt_steps_max',...
+                     'newt_steps_avg',...
+                     'n_g_calls',...
+                     'n_B_calls',...
+                     'n_prints'});
 
 % Calculate sizes
 if strcmp(out.integrator,'RATTLie') || strcmp(out.integrator,'SHAKELie') || strcmp(out.integrator,'half_explicit')
@@ -133,11 +136,16 @@ switch out.liegroup
 end
 sizebin1 = 1 + sizeq + (1 + has_vd)*sizev;
 if sizel > 0
-   sizebin1 = sizebin1 + 3*sizel;
-   if (out.stab2 == 1)
-      sizebin1 = sizebin1 + sizel;
-   end
+    sizebin1 = sizebin1 + 3*sizel;
+    if (out.stab2 == 1)
+        sizebin1 = sizebin1 + sizel;
+    end
 end
+size_err = 0;
+if strcmp(out.integrator,'half_explicit') && (out.eval_local_err == 1)
+   size_err = sizeq + sizev + 1;
+end
+sizebin1 = sizebin1 + size_err;
 
 if (out.output_t_at == 1)
    if not(out.t0 == 0.0)
@@ -145,7 +153,11 @@ if (out.output_t_at == 1)
    end
    sizebin2 = floor(out.te/out.t_output_at_multiples_of) + 1;
 else
-   sizebin2 = out.steps + 1;
+    if strcmp(out.integrator,'half_explicit')
+        sizebin2 = out.stats.n_prints;
+    else
+        sizebin2 = out.steps + 1;
+    end
 end
 
 % Test if binary file is intact
@@ -193,6 +205,12 @@ if (sizel > 0)
                       1+sizeq+(1+has_vd)*sizev+2*sizel+sizeeta + sizel,:);
 end
 
+if strcmp(out.integrator,'half_explicit') && (out.eval_local_err == 1)
+    out.rslt.local_est_err = bin(1+sizeq+(1+has_vd)*sizev+2*sizel+sizeeta + sizel + 1:...
+                                 1+sizeq+(1+has_vd)*sizev+2*sizel+sizeeta + sizel + size_err - 1,:);
+    out.rslt.local_err = bin(1+sizeq+(1+has_vd)*sizev+2*sizel+sizeeta + sizel + size_err,:);
+end
+
 % Check second dimension of bin
 if size(bin,2) ~= sizebin2
    out.rslt.finished = false;
@@ -202,10 +220,10 @@ else
    out.rslt.finished = true;
 end
 
-% Load statistics from lua file
-out.stats = readLua(luafname, ...
-                    {'cpu_time',...
-                     'newt_steps_max',...
-                     'newt_steps_avg',...
-                     'n_g_calls',...
-                     'n_B_calls'});
+% % Load statistics from lua file
+% out.stats = readLua(luafname, ...
+%                     {'cpu_time',...
+%                      'newt_steps_max',...
+%                      'newt_steps_avg',...
+%                      'n_g_calls',...
+%                      'n_B_calls'});
