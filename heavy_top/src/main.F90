@@ -30,6 +30,8 @@ program main
    integer                 :: iError
    integer                 :: iv3Error(3)
    integer                 :: iv4Error(4)
+   integer, allocatable    :: ivvError(:)
+   integer, allocatable    :: imError(:)
    character(len=256)      :: cError
    integer, parameter      :: max_length = 256
    integer                 :: thandle
@@ -40,6 +42,7 @@ program main
    character(len=128)            :: iomsg_str
    integer                       :: iostat_number
 
+   real(8), allocatable :: tmp_A(:)
 
    !!!!!! Get name of the config file
    call get_command_argument(1, conf_fname)
@@ -81,6 +84,88 @@ program main
    call aot_get_val(L = conf, key = 'k_bdf', val = prob%k_bdf, ErrCode = iError)
    call error_check(conf, iError, 'alpha_m')
    print *, 'k_bdf = ', prob%k_bdf
+#endif
+
+#ifdef INT_half_explicit
+   ! Algorithmic parameters
+   call aot_get_val(L = conf, key = 'stages', val = prob%GL(INTEGRATOR)_s, ErrCode = iError)
+   call error_check(conf, iError, 'stages')
+   print *, 'stages = ', prob%GL(INTEGRATOR)_s
+
+   call aot_get_val(L = conf, key = 'stages_bar', val = prob%GL(INTEGRATOR)_s_bar, ErrCode = iError)
+   call error_check(conf, iError, 'stages_bar')
+   print *, 'stages_bar = ', prob%GL(INTEGRATOR)_s_bar
+
+   call aot_get_val(L = conf, key = 'order', val = prob%GL(INTEGRATOR)_order, ErrCode = iError)
+   call error_check(conf, iError, 'order')
+   print *, 'order = ', prob%GL(INTEGRATOR)_order
+
+   if (allocated(ivvError)) deallocate(ivvError)
+   allocate(ivvError(prob%GL(INTEGRATOR)_s_bar+1))
+   allocate(prob%GL(INTEGRATOR)_c(prob%GL(INTEGRATOR)_s_bar+1))
+   
+   call aot_get_val(L = conf, key = 'c', val = prob%GL(INTEGRATOR)_c, ErrCode = ivvError)
+   do i=1,prob%GL(INTEGRATOR)_s_bar+1
+      call error_check(conf, ivvError(i), 'c')
+   end do
+   print *, 'c = ', prob%GL(INTEGRATOR)_c
+
+   if (allocated(ivvError)) deallocate(ivvError)
+   allocate(imError((prob%GL(INTEGRATOR)_s_bar+1)*(prob%GL(INTEGRATOR)_s_bar)))
+   allocate(tmp_A((prob%GL(INTEGRATOR)_s_bar+1)*(prob%GL(INTEGRATOR)_s_bar)))
+   call aot_get_val(L = conf, key = 'A', val = tmp_A, ErrCode = imError)
+   do i=1,(prob%GL(INTEGRATOR)_s_bar+1)*(prob%GL(INTEGRATOR)_s_bar)
+         call error_check(conf, imError(i), 'A')
+   end do
+   allocate(prob%GL(INTEGRATOR)_A(prob%GL(INTEGRATOR)_s_bar+1, prob%GL(INTEGRATOR)_s_bar))
+   ! save `tmp_A` in `prob%GL(INTEGRATOR)_A`
+   prob%GL(INTEGRATOR)_A = transpose(reshape(tmp_A, (/prob%GL(INTEGRATOR)_s_bar, prob%GL(INTEGRATOR)_s_bar+1/)))
+   ! print *, 'A = ', prob%GL(INTEGRATOR)_A
+   print *, 'A = ['
+   do i = 1,(prob%GL(INTEGRATOR)_s_bar+1)
+         print *, prob%GL(INTEGRATOR)_A(i,:)
+   end do
+   print *, ']'
+   print *, 'shape(A) = ', shape(prob%GL(INTEGRATOR)_A)
+
+   deallocate(imError)
+   deallocate(tmp_A)
+
+   if (allocated(ivvError)) deallocate(ivvError)
+   allocate(ivvError(prob%GL(INTEGRATOR)_s_bar))
+   allocate(prob%GL(INTEGRATOR)_d(prob%GL(INTEGRATOR)_s_bar))
+   call aot_get_val(L = conf, key = 'd', val = prob%GL(INTEGRATOR)_d, ErrCode = ivvError)
+   do i=1,prob%GL(INTEGRATOR)_s_bar
+      call error_check(conf, ivvError(i), 'd')
+   end do
+   print *, 'd = ', prob%GL(INTEGRATOR)_d
+
+   call aot_get_val(L = conf, key = 'local_error_control', val = prob%opts%local_error_control, ErrCode = iError)
+   call error_check(conf, iError, 'local_error_control')
+   print *, 'local_error_control = ', prob%opts%local_error_control
+
+   call aot_get_val(L = conf, key = 'step_size_control', val = prob%opts%step_size_control, ErrCode = iError)
+   call error_check(conf, iError, 'step_size_control')
+   print *, 'step_size_control = ', prob%opts%step_size_control
+   
+   if (prob%opts%local_error_control .or. prob%opts%step_size_control) then
+      if (allocated(ivvError)) then
+         deallocate(ivvError)
+      end if
+      allocate(ivvError(prob%GL(INTEGRATOR)_s_bar))
+      allocate(prob%GL(INTEGRATOR)_variable_step_coeff(prob%GL(INTEGRATOR)_s_bar))
+
+      call aot_get_val(L = conf, key = 'b', val = prob%GL(INTEGRATOR)_variable_step_coeff, ErrCode = ivvError)
+      do i=1,prob%GL(INTEGRATOR)_s_bar
+         call error_check(conf, ivvError(i), 'b')
+      end do
+      print *, 'b = ', prob%GL(INTEGRATOR)_variable_step_coeff
+
+      call aot_get_val(L = conf, key = 'order_step_control', val = prob%GL(INTEGRATOR)_order_variable_step, ErrCode = iError)
+      call error_check(conf, iError, 'order_step_control')
+      print *, 'order_step_control = ', prob%GL(INTEGRATOR)_order_variable_step
+
+   end if
 #endif
 
    ! Integrator options

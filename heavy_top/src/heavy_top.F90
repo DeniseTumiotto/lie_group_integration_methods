@@ -8,8 +8,6 @@ module heavy_top
    use s3sdr3_functions
    implicit none
 
-
-
    ! extension of the type GL(INTEGRATOR)_problem
    type, extends(GL(INTEGRATOR)_problem)   :: heavy_top_t
       !
@@ -70,7 +68,7 @@ module heavy_top
       procedure   :: GL(INTEGRATOR)_Z              => Z
       procedure   :: GL(INTEGRATOR)_matZ           => matZ ! dummy
       !
-#if defined(INT_RATTLie) || defined(INT_SHAKELie) || defined(INT_varint4lie)
+#if defined(INT_RATTLie) || defined(INT_SHAKELie) || defined(INT_varint4lie) || defined(INT_half_explicit)
       procedure   :: GL(INTEGRATOR)_inertial       => inertial
       procedure   :: GL(INTEGRATOR)_f              => f
       procedure   :: GL(INTEGRATOR)_Tg_inv_T       => Tg_inv_T
@@ -668,6 +666,8 @@ module heavy_top
                               this%l, this%lm, &
 #elif defined(INT_SHAKELie)
                               this%l, this%eta, &
+#elif defined(INT_half_explicit)
+                              this%l, &
 #else
                               this%vd, this%l, this%eta, &
 #endif
@@ -677,7 +677,7 @@ module heavy_top
                               ERROR STOP "RATTLie does not support index-3"
 #elif defined(INT_varint4lie)
                               ERROR STOP "varint4lie does not support index-3"
-#elif defined(INT_SHAKELie)
+#elif defined(INT_SHAKELie) || defined(INT_half_explicit)
                            write (this%out_bin_lun) this%q, this%v, &
                               this%l, this%GL(INTEGRATOR)_phi(this%q), matmul(this%GL(INTEGRATOR)_B(this%q), this%v)
 #else
@@ -686,7 +686,7 @@ module heavy_top
 #endif
                         end if
                      else
-#if defined(INT_RATTLie) || defined(INT_SHAKELie) || defined(INT_varint4lie)
+#if defined(INT_RATTLie) || defined(INT_SHAKELie) || defined(INT_varint4lie) || defined(INT_half_explicit)
                         write (this%out_bin_lun) this%q, this%v
 #else
                         write (this%out_bin_lun) this%q, this%v, this%vd
@@ -754,7 +754,7 @@ module heavy_top
 #if defined(INT_RATTLie) || defined(INT_varint4lie)
          allocate(this%p(this%sizev))
 #endif
-#if !defined(INT_RATTLie) && !defined(INT_SHAKELie) && !defined(INT_varint4lie)
+#if !defined(INT_RATTLie) && !defined(INT_SHAKELie) && !defined(INT_varint4lie) && !defined(INT_half_explicit)
          allocate(this%vd(this%sizev))
 #endif
 #ifdef INT_gena
@@ -780,7 +780,7 @@ module heavy_top
             end if
             allocate(this%lp(this%sizel))
 #endif
-#if !defined(INT_RATTLie) && !defined(INT_varint4lie)
+#if !defined(INT_RATTLie) && !defined(INT_varint4lie) && !defined(INT_half_explicit)
             ! In the stabilized index-2 case
             if ( this%opts%stab2 == 1 ) then
                ! allocate eta

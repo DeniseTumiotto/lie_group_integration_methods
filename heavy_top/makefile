@@ -16,12 +16,14 @@ else ifneq ($(filter RATTLie,$(MAKECMDGOALS)),)
 else
   # if none of those special goals is given, the integrator can be set here
   # manually
-  #INTEGRATOR = BLieDF
-  #INTEGRATORP = ../BLieDF
-  #INTEGRATOR = gena
-  #INTEGRATORP = ../gena
-  INTEGRATOR = RATTLie
-  INTEGRATORP = ../RATTLie
+  # INTEGRATOR = BLieDF
+  # INTEGRATORP = ../BLieDF
+  # INTEGRATOR = gena
+  # INTEGRATORP = ../gena
+  # INTEGRATOR = RATTLie
+  # INTEGRATORP = ../RATTLie
+  INTEGRATOR = half_explicit
+  INTEGRATORP = ../half_explicit
 endif
 
 # Set path of the implementation of the aotus library
@@ -47,8 +49,8 @@ FFLAGS = -cpp -ffree-line-length-none
 FFLAGS := $(FFLAGS) -DNO_Z -DINTEGRATOR=$(INTEGRATOR) -DINT_$(INTEGRATOR)
 
 # Extra flags for the Fortran compiler (are used for integrator, as well)
-EXTRAFFLAGS := -O3
-#EXTRAFFLAGS := -Wall -Wextra -Dpure='' -g -fbounds-check -fimplicit-none -fbacktrace -fcheck=all -finit-real=NaN -finit-integer=-77 -ffpe-trap=zero,invalid
+# EXTRAFFLAGS := -O3
+EXTRAFFLAGS := -Wall -Wextra -Dpure='' -g -fbounds-check -fimplicit-none -fbacktrace -fcheck=all -finit-real=NaN -finit-integer=-77 -ffpe-trap=zero,invalid
 #EXTRAFFLAGS := $(EXTRAFFLAGS) -pg
 export EXTRAFFLAGS
 
