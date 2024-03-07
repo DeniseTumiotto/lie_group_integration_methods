@@ -427,6 +427,10 @@ module half_explicit
       real(8), dimension(this%sizel,                 this%sizev) :: B0
       real(8), dimension(this%sizel,                 this%sizev) :: B1
       real(8), dimension(this%sizev+this%sizel, this%sizev+this%sizel) :: MBB0
+      real(8), dimension(this%sizeq) :: tmpq
+      real(8), dimension(this%sizev) :: tmpv
+      real(8), dimension(this%sizev) :: tmpt
+      real(8), dimension(this%sizel) :: tmpl
       
       ! calculation of step size $h$
       h = t1 - this%t
@@ -460,7 +464,10 @@ module half_explicit
       end if
       ! we need to solve a linear equation, first calulate the rhs
       ! 2. RIGHT HAND SIDE
-      dVn(1,:) = -(this%half_explicit_g(Qn(1,:), Vn(1,:), this%t + this%half_explicit_c(1)*h)+matmul(transpose(this%half_explicit_B(Qn(1,:))),Lambdan(1,:)))
+      tmpq = Qn(1,:)
+      tmpv = Vn(1,:)
+      tmpl = Lambdan(1,:)
+      dVn(1,:) = -(this%half_explicit_g(tmpq, tmpv, this%t + this%half_explicit_c(1)*h)+matmul(transpose(this%half_explicit_B(tmpq)),tmpl))
       ! count calls
       this%half_explicit_stats%ngcalls = this%half_explicit_stats%ngcalls + 1
       this%half_explicit_stats%nBcalls = this%half_explicit_stats%nBcalls + 1
@@ -479,7 +486,8 @@ module half_explicit
 
       ! second stage (only Theta_2 and Q_2)
       Thetan(2,:) = h * this%half_explicit_A(2,1) * dThetan(1,:)
-      Qn(2,:) = this%half_explicit_qlpexphDqtilde(this%q, 1.0_8, Thetan(2,:))
+      tmpt = Thetan(2,:)
+      Qn(2,:) = this%half_explicit_qlpexphDqtilde(this%q, 1.0_8, tmpt)
       ! Vn(2,:) = this%v + h * this%half_explicit_A(2,1) * dVn(1,:)
 
       ! following stages
@@ -492,14 +500,17 @@ module half_explicit
 
          if ( i < this%half_explicit_s_bar + 1 ) then
             ! evaluate dTheta_i
-            dThetan(i,:) = matmul(transpose(this%half_explicit_Tg_inv_T(Thetan(i,:))), Vn(i,:))
+            tmpt = Thetan(i,:)
+            tmpv = Vn(i,:)
+            dThetan(i,:) = matmul(transpose(this%half_explicit_Tg_inv_T(tmpt)), tmpv)
 
             ! evaluate Theta_{i+1} and Q_{i+1}
             Thetan(i+1,:) = 0.0_8
             do j=1,i
                Thetan(i+1,:)=Thetan(i+1,:) + h * this%half_explicit_A(i+1,j) * dThetan(j,:)
             end do
-            Qn(i+1,:) = this%half_explicit_qlpexphDqtilde(this%q, 1.0_8, Thetan(i+1,:))
+            tmpt = Thetan(i+1,:)
+            Qn(i+1,:) = this%half_explicit_qlpexphDqtilde(this%q, 1.0_8, tmpt)
 
             ! calculate $\dotV_{m,i}$ and $\Lambda_{m,i}$ --> dVn(i,:), Lambdan(i,:)
             ! 1. MATRIX OF COEFFICIENTS
@@ -508,7 +519,8 @@ module half_explicit
                if (this%opts%const_mass_matrix == 1) then
                   MBB0(1:this%sizev,1) = this%half_explicit_const_diag_M
                else
-                  MBB0(1:this%sizev,1) = this%half_explicit_diag_M(Qn(i,:))
+                  tmpq = Qn(i,:)
+                  MBB0(1:this%sizev,1) = this%half_explicit_diag_M(tmpq)
                end if
                do concurrent (i=2:this%sizev)
                   MBB0(i,i) = MBB0(i,1)
@@ -518,12 +530,15 @@ module half_explicit
                if (this%opts%const_mass_matrix == 1) then
                   MBB0(1:this%sizev,1:this%sizev) = this%half_explicit_const_M
                else
-                  MBB0(1:this%sizev,1:this%sizev) = this%half_explicit_M(Qn(i,:))
+                  tmpq = Qn(i,:)
+                  MBB0(1:this%sizev,1:this%sizev) = this%half_explicit_M(tmpq)
                end if
             end if
             ! calulate $B(Qn(i))$ and $B(Qn(i+1))$
-            B0 = this%half_explicit_B(Qn(i,:))
-            B1 = this%half_explicit_B(Qn(i+1,:))
+            tmpq = Qn(i,:)
+            B0 = this%half_explicit_B(tmpq)
+            tmpq = Qn(i+1,:)
+            B1 = this%half_explicit_B(tmpq)
             MBB0(1:this%sizev, this%sizev+1:this%sizev+this%sizel) = transpose(B0)
             MBB0(this%sizev+1:this%sizev+this%sizel, 1:this%sizev) = h * this%half_explicit_A(i+1,i) * B1
             ! count calls
@@ -535,7 +550,9 @@ module half_explicit
             do j = 1,i-1
                Vcrr = Vcrr + h * this%half_explicit_A(i+1,j) * dVn(j,:)
             end do
-            dVl(1:this%sizev) = -this%half_explicit_g(Qn(i,:), Vn(i,:), this%t + h * this%half_explicit_c(i))
+            tmpq = Qn(i,:)
+            tmpv = Vn(i,:)
+            dVl(1:this%sizev) = -this%half_explicit_g(tmpq, tmpv, this%t + h * this%half_explicit_c(i))
             dVl(this%sizev+1:this%sizev+this%sizel) = -matmul(B1, Vcrr)
             ! count calls
             this%half_explicit_stats%ngcalls = this%half_explicit_stats%ngcalls + 1
@@ -574,7 +591,8 @@ module half_explicit
                if (this%opts%const_mass_matrix == 1) then
                   MBB0(1:this%sizev,1) = this%half_explicit_const_diag_M
                else
-                  MBB0(1:this%sizev,1) = this%half_explicit_diag_M(Qn(i-1,:))
+                  tmpq = Qn(i-1,:)
+                  MBB0(1:this%sizev,1) = this%half_explicit_diag_M(tmpq)
                end if
                do concurrent (i=2:this%sizev)
                   MBB0(i,i) = MBB0(i,1)
@@ -584,11 +602,13 @@ module half_explicit
                if (this%opts%const_mass_matrix == 1) then
                   MBB0(1:this%sizev,1:this%sizev) = this%half_explicit_const_M
                else
-                  MBB0(1:this%sizev,1:this%sizev) = this%half_explicit_M(Qn(i-1,:))
+                  tmpq = Qn(i-1,:)
+                  MBB0(1:this%sizev,1:this%sizev) = this%half_explicit_M(tmpq)
                end if
             end if
             ! calulate $B(Qn(i-1))$ and $B(Qn_local_error)$
-            B0 = this%half_explicit_B(Qn(i-1,:))
+            tmpq = Qn(i-1,:)
+            B0 = this%half_explicit_B(tmpq)
             B1 = this%half_explicit_B(Qn_local_error)
             MBB0(1:this%sizev, this%sizev+1:this%sizev+this%sizel) = transpose(B0)
             MBB0(this%sizev+1:this%sizev+this%sizel, 1:this%sizev) = h * this%half_explicit_variable_step_coeff(i-1) * B1
@@ -601,7 +621,9 @@ module half_explicit
             do j = 1,i-2
                Vcrr = Vcrr + h * this%half_explicit_variable_step_coeff(j) * dVn(j,:)
             end do
-            dVl(1:this%sizev) = -this%half_explicit_g(Qn(i-1,:), Vn(i-1,:), this%t + h * this%half_explicit_c(i-1))
+            tmpq = Qn(i-1,:)
+            tmpv = Vn(i-1,:)
+            dVl(1:this%sizev) = -this%half_explicit_g(tmpq, tmpv, this%t + h * this%half_explicit_c(i-1))
             dVl(this%sizev+1:this%sizev+this%sizel) = -matmul(B1, Vcrr)
             ! count calls
             this%half_explicit_stats%ngcalls = this%half_explicit_stats%ngcalls + 1
