@@ -61,7 +61,7 @@ module testprobcrm
       real(8)                 :: t_output_at_multiples_of = 0.0_8
       !!
       integer                 :: kirchhoff = 0
-      !integer                 :: inextensible = 0
+      integer                 :: inextensible = 0
       !
       character(len=256)      :: externalfm_name
       integer                 :: externalfm_type
@@ -1263,17 +1263,18 @@ module testprobcrm
                rslt(i+1       ) = this%ds*w(6*i+3+1)
                rslt(i+1+this%n) = this%ds*w(6*i+3+2)
             endfor
-!            start = 2*this%n1
-!         else
-!            start = 0
-          end if
+            start = 2*this%n
+         else
+            start = 0
+         end if
 !
-!         ! check for inextensible rod
-!         if (this%inextensible == 1) then
-!            for(i,1,this%n1)
-!               rslt(start + i) = dot_product(Dx(:,i), Dx(:,i)) - this%ds**2
-!            endfor
-!         end if
+         ! check for inextensible rod
+         if (this%inextensible == 1) then
+            for(i,0,this%n-1)
+               ! rslt(start + i) = dot_product(Dx(:,i), Dx(:,i)) - this%ds**2
+               rslt(start + i+1) = this%ds*(w(6*i+3+3)-1.0_8)
+            endfor
+         end if
 !#undef for
 !#undef endfor
       end function myphi
@@ -1319,6 +1320,7 @@ module testprobcrm
          real(8)                       :: T(6,6)
          integer                       :: r
          integer                       :: i
+         integer                       :: start
 
          !ERROR STOP "function myB is not implemented and should not be reached"
 !         ! get x and p
@@ -1336,6 +1338,7 @@ module testprobcrm
 
          ! Check for Kirchhoff rod
          if (this%kirchhoff == 1) then
+            start = 2*this%n
             ! We need to take into account, that x1 and xn may be fixed,
             ! therefore the cases i=0 and i=n must be handled a little
             ! different.
@@ -1358,7 +1361,6 @@ module testprobcrm
                   r = 0;
                end if
             end if
-!
 
             do i=1,this%n-1
                T = tan_op_inv_s3sdr3(this%ds*w(6*(i-1)+1:6*(i-1)+6))
@@ -1386,21 +1388,57 @@ module testprobcrm
                   rslt(this%n+i, 6*i+1-r:6*i+6-r) = T(5,:)
                end if
             end if
-!
-!            i = this%n1
-!            rslt(        i, ind+1:ind+3) = -pvkptoRi(p(:,i), 1)
-!            rslt(        i, ind+4:ind+6) =  cross(e1, apply_conj_quat(p(:,i),Dx(:,i)))
-!            rslt(this%n1+i, ind+1:ind+3) = -pvkptoRi(p(:,i), 2)
-!            rslt(this%n1+i, ind+4:ind+6) =  cross(e2, apply_conj_quat(p(:,i),Dx(:,i)))
-!            if (this%fixed_xn == 0) then
-!               rslt(        i, ind+7:ind+9) = -rslt(        i, ind+1:ind+3)
-!               rslt(this%n1+i, ind+7:ind+9) = -rslt(this%n1+i, ind+1:ind+3)
-!            end if
-!
-!            start = 2*this%n1
-!         else
-!            start = 0
+         else
+            start = 0
          end if !(this%kirchhoff == 1)
+
+         ! Check for inextensible rod
+         if (this%inextensible == 1) then
+            ! We need to take into account, that x1 and xn may be fixed,
+            ! therefore the cases i=0 and i=n must be handled a little
+            ! different.
+            !i = 1
+            T = -tan_op_inv_s3sdr3(-this%ds*(w(1:6)-[0.0_8, 0.0_8, 0.0_8, 0.0_8, 0.0_8, 1.0_8]))
+            if (this%fixed_x0 == 1) then
+               if (this%fixed_p0 == 1) then
+                  r = 6
+               else
+                  rslt(start + 1, 1:3) =  T(6,1:3)
+                  r = 3
+               end if
+            else
+               if (this%fixed_p0 == 1) then
+                  ERROR STOP "free x, fixed p not implemented"
+               else
+                  rslt(start + 1, 1:6) =  T(6,:)
+                  r = 0;
+               end if
+            end if
+
+            do i=1,this%n-1
+               T = tan_op_inv_s3sdr3(this%ds*(w(6*(i-1)+1:6*(i-1)+6)-[0.0_8, 0.0_8, 0.0_8, 0.0_8, 0.0_8, 1.0_8]))
+               rslt(start + i, 6*i+1-r:6*i+6-r) = T(6,:)
+               T = -tan_op_inv_s3sdr3(-this%ds*(w(6*i+1:6*i+6)-[0.0_8, 0.0_8, 0.0_8, 0.0_8, 0.0_8, 1.0_8]))
+               rslt(start + i+1, 6*i+1-r:6*i+6-r) = T(6,:)
+            end do
+
+            i = this%n
+            T = tan_op_inv_s3sdr3(this%ds*(w(6*(i-1)+1:6*(i-1)+6)-[0.0_8, 0.0_8, 0.0_8, 0.0_8, 0.0_8, 1.0_8]))
+            if (this%fixed_xn == 1) then
+               if (this%fixed_pn == 1) then
+                  ! nothing
+               else
+                  rslt(start + i, 6*i+1-r:6*i+3-r) = T(6,1:3)
+               end if
+            else
+               if (this%fixed_pn == 1) then
+                  ERROR STOP "free x, fixed p not implemented"
+               else
+                  rslt(start + i, 6*i+1-r:6*i+6-r) = T(6,:)
+               end if
+            end if
+
+         end if !(this%inextensible == 1)
 !
 !
 !         ! Check for inextensible rod
@@ -1427,11 +1465,6 @@ module testprobcrm
 !               rslt(start+this%n1, ind+7:ind+9) =  2*Dx(:,this%n1)
 !            end if
 !         end if !(this%inextensible == 1)
-!
-      !! DEBUG
-      !call print_matrix(rslt,'B')
-      !!pause
-      !! GUBED
 
       end function myb
 
@@ -1497,7 +1530,7 @@ module testprobcrm
          ! internal variables
          real(8)                       :: w(6*this%n)
          real(8)                       :: tmpv(6), tmp(6)
-         integer                       :: i, r
+         integer                       :: i, r, start
 
          !ERROR STOP "function myZ is not implemented and should not be reached"
 !         ! get x and p
@@ -1506,8 +1539,8 @@ module testprobcrm
 !         ! get xd and Om
 !         call xdom_from_v(this, xd, Om, v)
 !
-!         ! set result to zero, because we will be adding up on it
-!         rslt = 0.0_8
+         ! set result to zero, because we will be adding up on it
+         rslt = 0.0_8
 !
 !         ! We need Delta x
 !         Dx = x(:,2:this%n) - x(:,1:this%n1)
@@ -1516,6 +1549,7 @@ module testprobcrm
 
          ! Check for Kirchhoff rod
          if (this%kirchhoff == 1) then
+            start = 2 * this%n
             ! Calculate w_{k+1/2}
             w = calculate_w(this, q)
 
@@ -1573,8 +1607,68 @@ module testprobcrm
                   + matmul(dtaninvSE3( this%ds*w(6*i+1:6*i+6),tmp),tmpv)
             rslt(       i+1) = tmp(4)
             rslt(this%n+i+1) = tmp(5)
+         else
+            start = 0            
          end if ! (this%kirchhoff == 1)
 
+         ! Check for inextensible rod
+         if (this%inextensible == 1) then
+            ! Calculate w_{k+1/2}
+            w = calculate_w(this, q)
+            w = w-[0.0_8, 0.0_8, 0.0_8, 0.0_8, 0.0_8, 1.0_8]
+
+            if (this%fixed_x0 == 1) then
+               if (this%fixed_p0 == 1) then
+                  tmpv(1:3) = 0.0_8
+                  r = 6
+               else
+                  tmpv(1:3) = v(1:3)
+                  r = 3
+               end if
+               tmpv(4:6) = 0.0_8
+            else
+               if (this%fixed_p0 == 1) then
+                  ERROR STOP "free x, fixed p not implemented"
+               else
+                  tmpv = v(1:6)
+                  r = 0
+               end if
+            end if
+            tmp =   tan_op_inv_mult_s3sdr3( this%ds*w(1:6),v(6+1-r:6+6-r)) &
+                  - tan_op_inv_mult_s3sdr3(-this%ds*w(1:6),tmpv)
+            tmp =   matmul(dtaninvSE3(-this%ds*w(1:6),tmp),tmpv) &
+                  + matmul(dtaninvSE3( this%ds*w(1:6),tmp),v(6+1-r:6+6-r))
+            rslt(start+1) = tmp(6)
+
+            do i=1,this%n-2
+               tmp =   tan_op_inv_mult_s3sdr3( this%ds*w(6*i+1:6*i+6),v(6*(i+1)+1-r:6*(i+1)+6-r)) &
+                     - tan_op_inv_mult_s3sdr3(-this%ds*w(6*i+1:6*i+6),v(6* i   +1-r:6* i   +6-r))
+               tmp =   matmul(dtaninvSE3(-this%ds*w(6*i+1:6*i+6),tmp),v(6* i   +1-r:6* i   +6-r)) &
+                     + matmul(dtaninvSE3( this%ds*w(6*i+1:6*i+6),tmp),v(6*(i+1)+1-r:6*(i+1)+6-r))
+               rslt(start+i+1) = tmp(6)
+            end do
+
+            i=this%n-1
+            if (this%fixed_xn == 1) then
+               if (this%fixed_pn == 1) then
+                  tmpv(1:3) = 0.0_8
+               else
+                  tmpv(1:3) = v(6*(i+1)+1-r:6*(i+1)+3-r)
+               end if
+               tmpv(4:6) = 0.0_8
+            else
+               if (this%fixed_pn == 1) then
+                  ERROR STOP "free x, fixed p not implemented"
+               else
+                  tmpv = v(6*(i+1)+1-r:6*(i+1)+6-r)
+               end if
+            end if
+            tmp =   tan_op_inv_mult_s3sdr3( this%ds*w(6*i+1:6*i+6),tmpv) &
+                  - tan_op_inv_mult_s3sdr3(-this%ds*w(6*i+1:6*i+6),v(6* i   +1-r:6* i   +6-r))
+            tmp =   matmul(dtaninvSE3(-this%ds*w(6*i+1:6*i+6),tmp),v(6* i   +1-r:6* i   +6-r)) &
+                  + matmul(dtaninvSE3( this%ds*w(6*i+1:6*i+6),tmp),tmpv)
+            rslt(start + i+1) = tmp(6)
+         end if ! (this%inextensible == 1)
 
 !            zerothisn1 = [0, this%n1]
 !            ! Loop over the contraints
@@ -2278,9 +2372,9 @@ end if
             else
                this%sizel = 0
             end if
-!            if (this%inextensible == 1) then
-!               this%sizel = this%sizel + this%n1
-!            end if
+           if (this%inextensible == 1) then
+              this%sizel = this%sizel + this%n
+           end if
 
 #if defined(INT_RATTLie) || defined(INT_varint4lie)
             ! allocate this%l
