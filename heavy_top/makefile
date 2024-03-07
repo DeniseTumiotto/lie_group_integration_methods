@@ -14,14 +14,14 @@ else ifneq ($(filter RATTLie,$(MAKECMDGOALS)),)
   INTEGRATOR = RATTLie
   INTEGRATORP = ../RATTLie
 else
-  # if none of those special goals is given, the integrator can be set here
-  # manually
-  # INTEGRATOR = BLieDF
-  # INTEGRATORP = ../BLieDF
-  # INTEGRATOR = gena
-  # INTEGRATORP = ../gena
-  # INTEGRATOR = RATTLie
-  # INTEGRATORP = ../RATTLie
+#   if none of those special goals is given, the integrator can be set here
+#   manually
+#   INTEGRATOR = BLieDF
+#   INTEGRATORP = ../BLieDF
+#   INTEGRATOR = gena
+#   INTEGRATORP = ../gena
+#   INTEGRATOR = RATTLie
+#   INTEGRATORP = ../RATTLie
   INTEGRATOR = half_explicit
   INTEGRATORP = ../half_explicit
 endif
