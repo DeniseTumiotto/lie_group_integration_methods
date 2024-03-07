@@ -165,4 +165,4 @@ for i = indx
     end
 end
 
-
+clearvars -except s

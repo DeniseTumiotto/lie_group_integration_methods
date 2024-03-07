@@ -144,9 +144,9 @@ if (out.output_s_at == 1)
    if out.kirchhoff == 1
       sizel = sizel + 2*length(out.output_s);
    end
-%   if out.inextensible == 1
-%      sizel = sizel + length(out.s_output_p);
-%   end
+  if out.inextensible == 1
+     sizel = sizel + length(out.s_output_p);
+  end
    sizebin1 = 1 + sizeq + (1+has_vd)*sizev + sizel;
    if (out.stab2 == 1)
       sizebin1 = sizebin1 + sizel;
@@ -178,9 +178,9 @@ else
    if out.stab2 == 1
        sizeeta = sizel;
    end
-%   if out.inextensible == 1
-%      sizel = sizel + (out.n - 1);
-%   end
+  if out.inextensible == 1
+     sizel = sizel + out.n;
+  end
     size_err = 0;
     if strcmp(out.integrator,'half_explicit') && (out.eval_local_err == 1)
        size_err = sizeq + sizev + 1;
