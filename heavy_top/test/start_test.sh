@@ -26,8 +26,8 @@ cp $CONFIG cfg_exp
 rm cfg_exp/$CONFIG
 
 # Loop over all files in directory of expanded config file
-#for CONF in cfg_exp/*.exp
-for CONF in $(ls cfg_exp/*.exp | shuf)
+for CONF in cfg_exp/*.exp
+# for CONF in $(ls cfg_exp/*.exp | shuf)
 #in random order!
 do
    # Get the number

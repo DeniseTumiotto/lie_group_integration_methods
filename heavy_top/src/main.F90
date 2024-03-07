@@ -403,6 +403,19 @@ program main
    ! EMXIF
    write (out_lua_lun, *) ''
 
+#ifdef INT_half_explicit
+   if ( prob%opts%local_error_control ) then
+      write (out_lua_lun, *) 'eval_local_err = 1'
+   else
+      write (out_lua_lun, *) 'eval_local_err = 0'
+   end if
+   if ( prob%opts%step_size_control ) then
+      write (out_lua_lun, *) 'step_control = 1'
+   else
+      write (out_lua_lun, *) 'step_control = 0'
+   end if
+#endif
+
    ! Flush lua file
    flush(out_lua_lun)
 
@@ -445,6 +458,7 @@ program main
    write (out_lua_lun, *) 'newt_steps_avg = ', prob%GL(INTEGRATOR)_stats%newt_steps_avg
    write (out_lua_lun, *) 'n_g_calls = ', prob%GL(INTEGRATOR)_stats%ngcalls
    write (out_lua_lun, *) 'n_B_calls = ', prob%GL(INTEGRATOR)_stats%nBcalls
+   write (out_lua_lun, *) 'n_prints = ', prob%GL(INTEGRATOR)_stats%n_prints
 
    ! Show statistics
    print *, ''

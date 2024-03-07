@@ -698,7 +698,12 @@ module heavy_top
                   else if (this%output_type == 2) then
                      ERROR STOP "output_type = 2 not implemented"
                   end if
-
+#if defined(INT_half_explicit)
+if ( this%opts%local_error_control ) then
+   write (this%out_bin_lun) this%local_est_err
+   write (this%out_bin_lun) this%err
+end if
+#endif
                   !! write misc output (DEBUG)
                   !write (this%out_misc_lun,*), this%t, this%v, !this%GL(INTEGRATOR)_stats%newt_steps_curr, this%GL(INTEGRATOR)_stats%newt_steps_max, !this%GL(INTEGRATOR)_stats%newt_steps_avg
                   !flush (this%out_misc_lun)

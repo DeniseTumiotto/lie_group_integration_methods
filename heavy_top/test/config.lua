@@ -4,10 +4,10 @@
 t0 = 0
 te = 1
 -- number of integration steps
-steps = math.ceil((te-t0)*2^[[ 13 ]])
+steps = math.ceil((te-t0)*2^[[ 10 || 11 || 12 || 13 || 14 || 15 || 18 ]])
 --steps = math.ceil((te-t0)*2^12)
 
-problemset = 63
+problemset = 61
 --problemset = [--[ 31 || 32 || 33 || 34 ]]
 --problemset = [--[ 10
 --             || 20

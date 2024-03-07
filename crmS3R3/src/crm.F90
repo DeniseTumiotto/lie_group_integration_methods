@@ -2034,8 +2034,8 @@ if ( this%opts%local_error_control ) then
 end if
 #endif
                   ! write misc output (DEBUG)
-                  write (this%out_misc_lun,*) this%t , this%GL(INTEGRATOR)_stats%newt_steps_curr, this%GL(INTEGRATOR)_stats%newt_steps_max, this%GL(INTEGRATOR)_stats%newt_steps_avg
-                  flush (this%out_misc_lun)
+                  ! write (this%out_misc_lun,*) this%t , this%GL(INTEGRATOR)_stats%newt_steps_curr, this%GL(INTEGRATOR)_stats%newt_steps_max, this%GL(INTEGRATOR)_stats%newt_steps_avg
+                  ! flush (this%out_misc_lun)
 
                end if
 
