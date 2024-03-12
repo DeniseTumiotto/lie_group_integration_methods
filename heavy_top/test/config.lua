@@ -2,12 +2,14 @@
 
 -- Integration interval
 t0 = 0
-te = 1
+te = 10
+-- h  = 0.001
 -- number of integration steps
-steps = math.ceil((te-t0)*2^[[ 10 || 11 || 12 || 13 || 14 || 15 || 18 ]])
---steps = math.ceil((te-t0)*2^12)
+-- steps = math.ceil((te-t0)*2^[--[ 10 || 11 || 12 || 13 || 14 || 15 || 18 ]])
+steps = math.ceil((te-t0)*2^12)
+-- steps = math.ceil((te-t0)*h^-1)
 
-problemset = 61
+problemset = 33
 --problemset = [--[ 31 || 32 || 33 || 34 ]]
 --problemset = [--[ 10
 --             || 20
@@ -249,3 +251,9 @@ else
    -- this may be changed when problemset == -1
    stab2 = 0
 end
+-- Baumgarte parameter
+my_C = 1
+-- a_baumgarte = my_C / h
+a_baumgarte = [[ 0. || 10. || 20. || 100. ]]
+-- Use iterative projection
+stab_proj = 0
