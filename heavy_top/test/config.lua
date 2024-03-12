@@ -9,7 +9,7 @@ te = 10
 steps = math.ceil((te-t0)*2^12)
 -- steps = math.ceil((te-t0)*h^-1)
 
-problemset = 33
+problemset = [[ 33 || 63 ]]
 --problemset = [--[ 31 || 32 || 33 || 34 ]]
 --problemset = [--[ 10
 --             || 20
