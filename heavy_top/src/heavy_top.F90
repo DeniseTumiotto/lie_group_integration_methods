@@ -752,7 +752,11 @@ end if
                this%sizev = 3+3
                this%sizel = 3
          end select
-
+         
+#if defined(INT_half_explicit)
+         if (allocated(this%local_est_err)) deallocate(this%local_est_err)
+            allocate(this%local_est_err(this%sizeq + this%sizev))
+#endif
          ! Allocate position, velocity, acceleration, acceleration-like-varible
          allocate(this%q(this%sizeq))
          allocate(this%v(this%sizev))

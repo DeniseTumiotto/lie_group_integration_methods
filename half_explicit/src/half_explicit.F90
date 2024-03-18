@@ -381,7 +381,6 @@ module half_explicit
       ! we need to solve a linear equation, first calulate the rhs
       vdl(1:this%sizev)                       = -this%half_explicit_g(this%q, this%v, this%t)
       vdl(this%sizev+1:this%sizev+this%sizel) = -this%half_explicit_Z(this%q, this%v)
-      ! vdl(this%sizev+1:this%sizev+this%sizel) = -this%half_explicit_Z(this%q, this%v) - this%opts%a_baumgarte * ( matmul(B0, this%v) + this%opts%a_baumgarte * phi0 )
       ! count calls
       this%half_explicit_stats%ngcalls = this%half_explicit_stats%ngcalls + 1
       ! then solve the system
@@ -621,6 +620,10 @@ module half_explicit
             tmpq = Qn(i-1,:)
             B0 = this%half_explicit_B(tmpq)
             B1 = this%half_explicit_B(Qn_local_error)
+            phi1 = 0.0_8
+            if ( this%opts%stab2 /= 0 .and. this%opts%stab_proj == 0 ) then
+               phi1 = this%half_explicit_phi(Qn_local_error) ! Baumgarte stabilization
+            end if
             MBB0(1:this%sizev, this%sizev+1:this%sizev+this%sizel) = transpose(B0)
             MBB0(this%sizev+1:this%sizev+this%sizel, 1:this%sizev) = h * this%half_explicit_variable_step_coeff(i-1) * B1
             ! count calls
@@ -635,7 +638,7 @@ module half_explicit
             tmpq = Qn(i-1,:)
             tmpv = Vn(i-1,:)
             dVl(1:this%sizev) = -this%half_explicit_g(tmpq, tmpv, this%t + h * this%half_explicit_c(i-1))
-            dVl(this%sizev+1:this%sizev+this%sizel) = -matmul(B1, Vcrr)
+            dVl(this%sizev+1:this%sizev+this%sizel) = -matmul(B1, Vcrr) - this%opts%a_baumgarte * phi1
             ! count calls
             this%half_explicit_stats%ngcalls = this%half_explicit_stats%ngcalls + 1
             ! then solve the system
@@ -661,8 +664,10 @@ module half_explicit
             end do
             Vn_local_error = Vn_local_error + h * this%half_explicit_variable_step_coeff(i-1) * dVn_local_error
 
-            this%local_est_err(1:this%sizeq) = abs(Qn(this%half_explicit_s+1,:) - Qn_local_error)
-            this%local_est_err(this%sizeq+1:this%sizeq+this%sizev) = abs(Vn(this%half_explicit_s+1,:) - Vn_local_error)
+            tmpq = Qn(this%half_explicit_s+1,:)
+            tmpv = Vn(this%half_explicit_s+1,:)
+            this%local_est_err(1:this%sizeq) = abs(tmpq - Qn_local_error)
+            this%local_est_err(this%sizeq+1:this%sizeq+this%sizev) = abs(tmpv - Vn_local_error)
 
             this%err = 0.0_8
             ! evaluate local error
