@@ -158,4 +158,3 @@ cleantest:
 
 # Target that even cleans everything
 mrproper: clean cleantest
-	-rm test/als/readLua.m*
