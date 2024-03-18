@@ -9,6 +9,8 @@ module half_explicit
       integer :: constrained = 0
       ! use stabilized index two formulation
       integer :: stab2 = 0
+      real(8) :: a_baumgarte = 0.0_8
+      integer :: stab_proj = 0
       ! mass matrix is constant?
       integer :: const_mass_matrix = 0
       ! mass matrix is a diagonal matrix? If == 1 then half_explicit_diag_M
@@ -343,9 +345,12 @@ module half_explicit
       integer                                                              :: info    ! info flag for dgesv
       real(8), dimension(this%sizev+this%sizel, this%sizev+this%sizel)     :: MBB0    ! Matrix
       real(8), dimension(this%sizel, this%sizev)                           :: B0      ! $B(q_0)$
+      ! real(8), dimension(this%sizel)                                       :: phi0    ! $phi(q_0)$
       !
       ! calulate $B(q_0)$
       B0 = this%half_explicit_b(this%q)
+      ! phi0 = this%half_explicit_phi(this%q)
+
       ! count calls
       this%half_explicit_stats%nBcalls = this%half_explicit_stats%nBcalls + 1
 
@@ -426,6 +431,7 @@ module half_explicit
       real(8), dimension(this%sizev,                 this%sizev) :: M
       real(8), dimension(this%sizel,                 this%sizev) :: B0
       real(8), dimension(this%sizel,                 this%sizev) :: B1
+      real(8), dimension(this%sizel) :: phi1
       real(8), dimension(this%sizev+this%sizel, this%sizev+this%sizel) :: MBB0
       real(8), dimension(this%sizeq) :: tmpq
       real(8), dimension(this%sizev) :: tmpv
@@ -488,7 +494,6 @@ module half_explicit
       Thetan(2,:) = h * this%half_explicit_A(2,1) * dThetan(1,:)
       tmpt = Thetan(2,:)
       Qn(2,:) = this%half_explicit_qlpexphDqtilde(this%q, 1.0_8, tmpt)
-      ! Vn(2,:) = this%v + h * this%half_explicit_A(2,1) * dVn(1,:)
 
       ! following stages
       do i=2,this%half_explicit_s_bar + 1
@@ -536,9 +541,14 @@ module half_explicit
             end if
             ! calulate $B(Qn(i))$ and $B(Qn(i+1))$
             tmpq = Qn(i,:)
-            B0 = this%half_explicit_B(tmpq)
+            B0   = this%half_explicit_B(tmpq)
             tmpq = Qn(i+1,:)
-            B1 = this%half_explicit_B(tmpq)
+            B1   = this%half_explicit_B(tmpq)
+            phi1 = 0.0_8
+            if ( this%opts%stab2 /= 0 .and. this%opts%stab_proj == 0 ) then
+               phi1 = this%half_explicit_phi(tmpq) ! Baumgarte stabilization
+            end if
+
             MBB0(1:this%sizev, this%sizev+1:this%sizev+this%sizel) = transpose(B0)
             MBB0(this%sizev+1:this%sizev+this%sizel, 1:this%sizev) = h * this%half_explicit_A(i+1,i) * B1
             ! count calls
@@ -553,7 +563,7 @@ module half_explicit
             tmpq = Qn(i,:)
             tmpv = Vn(i,:)
             dVl(1:this%sizev) = -this%half_explicit_g(tmpq, tmpv, this%t + h * this%half_explicit_c(i))
-            dVl(this%sizev+1:this%sizev+this%sizel) = -matmul(B1, Vcrr)
+            dVl(this%sizev+1:this%sizev+this%sizel) = -matmul(B1, Vcrr) - this%opts%a_baumgarte * phi1
             ! count calls
             this%half_explicit_stats%ngcalls = this%half_explicit_stats%ngcalls + 1
             ! then solve the system
@@ -610,6 +620,10 @@ module half_explicit
             tmpq = Qn(i-1,:)
             B0 = this%half_explicit_B(tmpq)
             B1 = this%half_explicit_B(Qn_local_error)
+            phi1 = 0.0_8
+            if ( this%opts%stab2 /= 0 .and. this%opts%stab_proj == 0 ) then
+               phi1 = this%half_explicit_phi(Qn_local_error) ! Baumgarte stabilization
+            end if
             MBB0(1:this%sizev, this%sizev+1:this%sizev+this%sizel) = transpose(B0)
             MBB0(this%sizev+1:this%sizev+this%sizel, 1:this%sizev) = h * this%half_explicit_variable_step_coeff(i-1) * B1
             ! count calls
@@ -624,7 +638,7 @@ module half_explicit
             tmpq = Qn(i-1,:)
             tmpv = Vn(i-1,:)
             dVl(1:this%sizev) = -this%half_explicit_g(tmpq, tmpv, this%t + h * this%half_explicit_c(i-1))
-            dVl(this%sizev+1:this%sizev+this%sizel) = -matmul(B1, Vcrr)
+            dVl(this%sizev+1:this%sizev+this%sizel) = -matmul(B1, Vcrr) - this%opts%a_baumgarte * phi1
             ! count calls
             this%half_explicit_stats%ngcalls = this%half_explicit_stats%ngcalls + 1
             ! then solve the system
@@ -650,8 +664,10 @@ module half_explicit
             end do
             Vn_local_error = Vn_local_error + h * this%half_explicit_variable_step_coeff(i-1) * dVn_local_error
 
-            this%local_est_err(1:this%sizeq) = abs(Qn(this%half_explicit_s+1,:) - Qn_local_error)
-            this%local_est_err(this%sizeq+1:this%sizeq+this%sizev) = abs(Vn(this%half_explicit_s+1,:) - Vn_local_error)
+            tmpq = Qn(this%half_explicit_s+1,:)
+            tmpv = Vn(this%half_explicit_s+1,:)
+            this%local_est_err(1:this%sizeq) = abs(tmpq - Qn_local_error)
+            this%local_est_err(this%sizeq+1:this%sizeq+this%sizev) = abs(tmpv - Vn_local_error)
 
             this%err = 0.0_8
             ! evaluate local error

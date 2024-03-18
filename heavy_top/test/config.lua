@@ -2,22 +2,25 @@
 
 -- Integration interval
 t0 = 0
-te = 1
+te = 100
+-- h  = 0.001
 -- number of integration steps
-steps = math.ceil((te-t0)*2^[[ 10 || 11 || 12 || 13 || 14 || 15 || 18 ]])
---steps = math.ceil((te-t0)*2^12)
+-- steps = math.ceil((te-t0)*2^[--[ 10 || 11 || 12 || 13 || 14 || 15 || 18 ]])
+steps = math.ceil((te-t0)*2^12)
+-- steps = math.ceil((te-t0)*h^-1)
 
-problemset = 61
---problemset = [--[ 31 || 32 || 33 || 34 ]]
---problemset = [--[ 10
---             || 20
---             || 31 || 32 || 33 || 34
---             || 41 || 42 || 43 || 44
---             || 51 || 52 || 53 || 54
---             || 61 || 62 || 63 || 64
---             || 71 || 72 || 73 || 74
---             ]]
---problemset = [--[ 53 || 63 || 73 ]]
+-- problemset = 61
+problemset = [[ 33 || 53 ]]
+-- problemset = [--[ 31 || 32 || 33 || 34 ]]
+-- problemset = [--[ 10
+--              || 20
+--              || 31 || 32 || 33 || 34
+--              || 41 || 42 || 43 || 44
+--              || 51 || 52 || 53 || 54
+--              || 61 || 62 || 63 || 64
+--              || 71 || 72 || 73 || 74
+--              ]]
+-- problemset = [--[ 53 || 63 || 73 ]]
 -- For no predefined problem set use -1
 -- Lie groups:
 --  10: SO(3)
@@ -249,3 +252,10 @@ else
    -- this may be changed when problemset == -1
    stab2 = 0
 end
+-- Baumgarte parameter
+my_C = 1
+-- a_baumgarte = my_C / h
+a_baumgarte = [[ 0. || 10. || 100. ]]
+-- a_baumgarte = 0.
+-- Use iterative projection
+stab_proj = 0

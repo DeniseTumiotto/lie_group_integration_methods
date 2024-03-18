@@ -237,20 +237,28 @@ program main
    print *, 'imax = ', prob%opts%imax
 
    call aot_get_val(L = conf, key = 'stab2', val = prob%opts%stab2, ErrCode = iError)
-   call error_check(conf, iError, 'imax')
+   call error_check(conf, iError, 'stab2')
    print *, 'stab2 = ', prob%opts%stab2
+
+   call aot_get_val(L = conf, key = 'a_baumgarte', val = prob%opts%a_baumgarte, ErrCode = iError)
+   call error_check(conf, iError, 'a_baumgarte')
+   print *, 'a_baumgarte = ', prob%opts%a_baumgarte
+
+   call aot_get_val(L = conf, key = 'stab_proj', val = prob%opts%stab_proj, ErrCode = iError)
+   call error_check(conf, iError, 'stab_proj')
+   print *, 'stab_proj = ', prob%opts%stab_proj
 
    ! Integration interval and step size
    call aot_get_val(L = conf, key = 't0', val = prob%opts%t0, ErrCode = iError)
-   call error_check(conf, iError, 'imax')
+   call error_check(conf, iError, 't0')
    print *, 't0 = ', prob%opts%t0
 
    call aot_get_val(L = conf, key = 'te', val = prob%opts%te, ErrCode = iError)
-   call error_check(conf, iError, 'imax')
+   call error_check(conf, iError, 'te')
    print *, 'te = ', prob%opts%te
 
    call aot_get_val(L = conf, key = 'steps', val = prob%opts%nsteps, ErrCode = iError)
-   call error_check(conf, iError, 'imax')
+   call error_check(conf, iError, 'steps')
    print *, 'steps = ', prob%opts%nsteps
 
    ! Problem options

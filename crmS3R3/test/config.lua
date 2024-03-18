@@ -180,12 +180,20 @@ imax = 100
 -- Integration interval and step size
 t0 = 0
 te = 10
+-- h  = [--[ 0.01 || 0.001 || 0.0001 ]]
 -- steps = math.ceil((te-t0)*2^[--[ 7 || 8 || 9 || 10 || 11 || 12 || 18 ]])
 -- steps = 2^([--[ 5 || 6 || 7 || 8 || 9 ]])
 steps = math.ceil((te-t0)*2^10)
+-- steps = math.ceil((te-t0) * h^-1)
 
 -- Use stabilized index-2 formulation (only applies to the constrained case)
-stab2 = 0
+stab2 = 1
+-- Baumgarte parameter
+my_C = 1
+-- a_baumgarte = my_C / h
+a_baumgarte = [[ 0. || 10. || 50. || 100. ]]
+-- Use iterative projection
+stab_proj = 0
 
 -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- --
 -- -- -- Problem options   -- -- -- -- -- -- -- -- -- -- -- --
