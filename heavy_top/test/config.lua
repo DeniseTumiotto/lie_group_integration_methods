@@ -2,7 +2,7 @@
 
 -- Integration interval
 t0 = 0
-te = 100
+te = 10
 -- h  = 0.001
 -- number of integration steps
 -- steps = math.ceil((te-t0)*2^[--[ 10 || 11 || 12 || 13 || 14 || 15 || 18 ]])
@@ -10,7 +10,7 @@ steps = math.ceil((te-t0)*2^12)
 -- steps = math.ceil((te-t0)*h^-1)
 
 -- problemset = 61
-problemset = [[ 33 || 53 ]]
+problemset = [[ 33 || 31 || 53 || 51 ]]
 -- problemset = [--[ 31 || 32 || 33 || 34 ]]
 -- problemset = [--[ 10
 --              || 20
@@ -85,7 +85,7 @@ end
 --  2: Output in terms of SO(3) x R^3
 output_type = 1
 -- Output only at certain times
-output_t_at = 1
+output_t_at = 0
 t_output_at_multiples_of = 1/2^8
 
 -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- --
@@ -255,7 +255,7 @@ end
 -- Baumgarte parameter
 my_C = 1
 -- a_baumgarte = my_C / h
-a_baumgarte = [[ 0. || 10. || 100. ]]
--- a_baumgarte = 0.
+-- a_baumgarte = [--[ 0. || 10. || 100. ]]
+a_baumgarte = 0.
 -- Use iterative projection
-stab_proj = 0
+stab_proj = 1

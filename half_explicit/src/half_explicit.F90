@@ -580,112 +580,156 @@ module half_explicit
             dVn(i,:)     = dVl(1:this%sizev)
             Lambdan(i,:) = dVl(this%sizev+1:this%sizev+this%sizel)
          end if
+      end do
 
-         if ( ((this%opts%local_error_control) .or. (this%opts%step_size_control)) .and. (i == this%half_explicit_s_bar + 1) ) then
-            
-            ! evaluate Theta_error_control and Q_error_control
-            Thetan_local_error = 0.0_8
-            do j=1,i-1
-               Thetan_local_error = Thetan_local_error + h * this%half_explicit_variable_step_coeff(j) * dThetan(j,:)
-            end do
-            Qn_local_error = this%half_explicit_qlpexphDqtilde(this%q, 1.0_8, Thetan_local_error)
-
-            ! ------------------------------------------------------------------------------------
-            ! ------------------------------------------------------------------------------------
-            ! ------------------------------------------------------------------------------------
-            ! ------------------------------------------------------------------------------------
-            ! calculate $\dotV_{m,i}$ and $\Lambda_{m,i}$ --> dVn(i,:), Lambdan(i,:)
-            ! 1. MATRIX OF COEFFICIENTS
-            MBB0 = 0.0_8
-            if (this%opts%diag_mass_matrix == 1) then
-               if (this%opts%const_mass_matrix == 1) then
-                  MBB0(1:this%sizev,1) = this%half_explicit_const_diag_M
-               else
-                  tmpq = Qn(i-1,:)
-                  MBB0(1:this%sizev,1) = this%half_explicit_diag_M(tmpq)
-               end if
-               do concurrent (i=2:this%sizev)
-                  MBB0(i,i) = MBB0(i,1)
-                  MBB0(i,1) = 0.0_8
-               end do
+      if ( this%opts%stab2 /= 0 .and. this%opts%stab_proj /= 0 ) then
+         MBB0 = 0.0_8
+         if (this%opts%diag_mass_matrix == 1) then
+            if (this%opts%const_mass_matrix == 1) then
+               MBB0(1:this%sizev,1) = this%half_explicit_const_diag_M
             else
-               if (this%opts%const_mass_matrix == 1) then
-                  MBB0(1:this%sizev,1:this%sizev) = this%half_explicit_const_M
-               else
-                  tmpq = Qn(i-1,:)
-                  MBB0(1:this%sizev,1:this%sizev) = this%half_explicit_M(tmpq)
-               end if
+               MBB0(1:this%sizev,1) = this%half_explicit_diag_M(this%q)
             end if
-            ! calulate $B(Qn(i-1))$ and $B(Qn_local_error)$
-            tmpq = Qn(i-1,:)
-            B0 = this%half_explicit_B(tmpq)
-            B1 = this%half_explicit_B(Qn_local_error)
-            phi1 = 0.0_8
-            if ( this%opts%stab2 /= 0 .and. this%opts%stab_proj == 0 ) then
-               phi1 = this%half_explicit_phi(Qn_local_error) ! Baumgarte stabilization
-            end if
-            MBB0(1:this%sizev, this%sizev+1:this%sizev+this%sizel) = transpose(B0)
-            MBB0(this%sizev+1:this%sizev+this%sizel, 1:this%sizev) = h * this%half_explicit_variable_step_coeff(i-1) * B1
-            ! count calls
-            this%half_explicit_stats%nBcalls = this%half_explicit_stats%nBcalls + 2
-            ! we need to solve a linear equation, first calulate the rhs
-            ! 2. RIGHT HAND SIDE
-            ! V_{i+1} without the last value of dV_i, which we are going to evaluate NOW
-            Vcrr = this%v
-            do j = 1,i-2
-               Vcrr = Vcrr + h * this%half_explicit_variable_step_coeff(j) * dVn(j,:)
+            do concurrent (i=2:this%sizev)
+               MBB0(i,i) = MBB0(i,1)
+               MBB0(i,1) = 0.0_8
             end do
-            tmpq = Qn(i-1,:)
-            tmpv = Vn(i-1,:)
-            dVl(1:this%sizev) = -this%half_explicit_g(tmpq, tmpv, this%t + h * this%half_explicit_c(i-1))
-            dVl(this%sizev+1:this%sizev+this%sizel) = -matmul(B1, Vcrr) - this%opts%a_baumgarte * phi1
-            ! count calls
-            this%half_explicit_stats%ngcalls = this%half_explicit_stats%ngcalls + 1
-            ! then solve the system
-            call dgesv(                       &! solve the System A*X=B and save the result in B
-                       this%sizev+this%sizel, &! number of linear equations (=size(A,1))      ! Vorsicht: double precision muss real(8) sein, sonst gibt es Probleme
-                       1,                     &! number of right hand sides (=size(B,2))
-                       MBB0,                  &! matrix A
-                       this%sizev+this%sizel, &! leading dimension of A, in this case is equal to the number of linear equations (=size(A,1))
-                       ipiv,                  &! integer pivot vector; it is not needed
-                       dVl,                   &! matrix B
-                       this%sizev+this%sizel, &! leading dimension of B,  in this case is equal to the number of linear equations (=size(B,1)=size(A,1))
-                       info)                   ! integer information flag
-                     ! if (info .ne. 0)  print*, "TimeStep--following steps: dgesv sagt info=", info ! TODO
-            dVn_local_error = dVl(1:this%sizev)
-            ! ------------------------------------------------------------------------------------
-            ! ------------------------------------------------------------------------------------
-            ! ------------------------------------------------------------------------------------
-            ! ------------------------------------------------------------------------------------
-
-            Vn_local_error = this%v
-            do j = 1,i-2
-               Vn_local_error = Vn_local_error + h * this%half_explicit_variable_step_coeff(j) * dVn(j,:)
-            end do
-            Vn_local_error = Vn_local_error + h * this%half_explicit_variable_step_coeff(i-1) * dVn_local_error
-
-            tmpq = Qn(this%half_explicit_s+1,:)
-            tmpv = Vn(this%half_explicit_s+1,:)
-            this%local_est_err(1:this%sizeq) = abs(tmpq - Qn_local_error)
-            this%local_est_err(this%sizeq+1:this%sizeq+this%sizev) = abs(tmpv - Vn_local_error)
-
-            this%err = 0.0_8
-            ! evaluate local error
-            do j = 1,this%sizeq+this%sizev
-               if (j < this%sizeq + 1) then
-                  this%err = this%err + ((Qn(this%half_explicit_s+1,j)-Qn_local_error(j))/(this%opts%atol + max(abs(Qn(this%half_explicit_s+1,j)),abs(Qn(1,j))) * this%opts%rtol))**2
-               else
-                  this%err = this%err + ((Vn(this%half_explicit_s+1,j-this%sizeq)-Vn_local_error(j-this%sizeq))/(this%opts%atol + max(abs(Vn(this%half_explicit_s+1,j-this%sizeq)),abs(Vn(1,j-this%sizeq))) * this%opts%rtol))**2
-               end if
-            end do
-            this%err = sqrt(this%err / (this%sizeq + this%sizev))
-            if ( this%opts%step_size_control .and. (this%err > 1) ) then
-               accepted_step = .false.
-            elseif ( this%opts%step_size_control .and. (this%err .le. 1) ) then
-               accepted_step = .true.
+         else
+            if (this%opts%const_mass_matrix == 1) then
+               MBB0(1:this%sizev,1:this%sizev) = this%half_explicit_const_M
+            else
+               MBB0(1:this%sizev,1:this%sizev) = this%half_explicit_M(this%q)
             end if
          end if
-      end do
+         tmpq = Qn(this%half_explicit_s+1,:)
+         tmpt = Thetan(this%half_explicit_s+1,:)
+         B0 = this%half_explicit_B(this%q)
+         B1 = this%half_explicit_B(tmpq)
+         MBB0(1:this%sizev, this%sizev+1:this%sizev+this%sizel) = transpose(B0)
+         MBB0(this%sizev+1:this%sizev+this%sizel, 1:this%sizev) = matmul(B1,this%half_explicit_Tg(1.0_8, tmpt))
+         ! right hand side
+         dVl(1:this%sizev) = 0.0_8
+         dVl(this%sizev+1:this%sizev+this%sizel) = -this%half_explicit_phi(tmpq)
+         ! then solve the system
+         call dgesv(                       &! solve the System A*X=B and save the result in B
+                    this%sizev+this%sizel, &! number of linear equations (=size(A,1))      ! Vorsicht: double precision muss real(8) sein, sonst gibt es Probleme
+                    1,                     &! number of right hand sides (=size(B,2))
+                    MBB0,                  &! matrix A
+                    this%sizev+this%sizel, &! leading dimension of A, in this case is equal to the number of linear equations (=size(A,1))
+                    ipiv,                  &! integer pivot vector; it is not needed
+                    dVl,                   &! matrix B
+                    this%sizev+this%sizel, &! leading dimension of B,  in this case is equal to the number of linear equations (=size(B,1)=size(A,1))
+                    info)                   ! integer information flag
+                  ! if (info .ne. 0)  print*, "TimeStep--following steps: dgesv sagt info=", info ! TODO
+         tmpt = tmpt + dVl(1:this%sizev)
+         Qn(this%half_explicit_s+1,:) = this%half_explicit_qlpexphDqtilde(this%q, 1.0_8, tmpt)
+      end if
+
+      if ( (this%opts%local_error_control) .or. (this%opts%step_size_control) ) then
+            
+         ! evaluate Theta_error_control and Q_error_control
+         Thetan_local_error = 0.0_8
+         do j=1,i-1
+            Thetan_local_error = Thetan_local_error + h * this%half_explicit_variable_step_coeff(j) * dThetan(j,:)
+         end do
+         Qn_local_error = this%half_explicit_qlpexphDqtilde(this%q, 1.0_8, Thetan_local_error)
+
+         ! ------------------------------------------------------------------------------------
+         ! ------------------------------------------------------------------------------------
+         ! ------------------------------------------------------------------------------------
+         ! ------------------------------------------------------------------------------------
+         ! calculate $\dotV_{m,i}$ and $\Lambda_{m,i}$ --> dVn(i,:), Lambdan(i,:)
+         ! 1. MATRIX OF COEFFICIENTS
+         MBB0 = 0.0_8
+         if (this%opts%diag_mass_matrix == 1) then
+            if (this%opts%const_mass_matrix == 1) then
+               MBB0(1:this%sizev,1) = this%half_explicit_const_diag_M
+            else
+               tmpq = Qn(i-1,:)
+               MBB0(1:this%sizev,1) = this%half_explicit_diag_M(tmpq)
+            end if
+            do concurrent (i=2:this%sizev)
+               MBB0(i,i) = MBB0(i,1)
+               MBB0(i,1) = 0.0_8
+            end do
+         else
+            if (this%opts%const_mass_matrix == 1) then
+               MBB0(1:this%sizev,1:this%sizev) = this%half_explicit_const_M
+            else
+               tmpq = Qn(i-1,:)
+               MBB0(1:this%sizev,1:this%sizev) = this%half_explicit_M(tmpq)
+            end if
+         end if
+         ! calulate $B(Qn(i-1))$ and $B(Qn_local_error)$
+         tmpq = Qn(i-1,:)
+         B0 = this%half_explicit_B(tmpq)
+         B1 = this%half_explicit_B(Qn_local_error)
+         phi1 = 0.0_8
+         if ( this%opts%stab2 /= 0 .and. this%opts%stab_proj == 0 ) then
+            phi1 = this%half_explicit_phi(Qn_local_error) ! Baumgarte stabilization
+         end if
+         MBB0(1:this%sizev, this%sizev+1:this%sizev+this%sizel) = transpose(B0)
+         MBB0(this%sizev+1:this%sizev+this%sizel, 1:this%sizev) = h * this%half_explicit_variable_step_coeff(i-1) * B1
+         ! count calls
+         this%half_explicit_stats%nBcalls = this%half_explicit_stats%nBcalls + 2
+         ! we need to solve a linear equation, first calulate the rhs
+         ! 2. RIGHT HAND SIDE
+         ! V_{i+1} without the last value of dV_i, which we are going to evaluate NOW
+         Vcrr = this%v
+         do j = 1,i-2
+            Vcrr = Vcrr + h * this%half_explicit_variable_step_coeff(j) * dVn(j,:)
+         end do
+         tmpq = Qn(i-1,:)
+         tmpv = Vn(i-1,:)
+         dVl(1:this%sizev) = -this%half_explicit_g(tmpq, tmpv, this%t + h * this%half_explicit_c(i-1))
+         dVl(this%sizev+1:this%sizev+this%sizel) = -matmul(B1, Vcrr) - this%opts%a_baumgarte * phi1
+         ! count calls
+         this%half_explicit_stats%ngcalls = this%half_explicit_stats%ngcalls + 1
+         ! then solve the system
+         call dgesv(                       &! solve the System A*X=B and save the result in B
+                    this%sizev+this%sizel, &! number of linear equations (=size(A,1))      ! Vorsicht: double precision muss real(8) sein, sonst gibt es Probleme
+                    1,                     &! number of right hand sides (=size(B,2))
+                    MBB0,                  &! matrix A
+                    this%sizev+this%sizel, &! leading dimension of A, in this case is equal to the number of linear equations (=size(A,1))
+                    ipiv,                  &! integer pivot vector; it is not needed
+                    dVl,                   &! matrix B
+                    this%sizev+this%sizel, &! leading dimension of B,  in this case is equal to the number of linear equations (=size(B,1)=size(A,1))
+                    info)                   ! integer information flag
+                  ! if (info .ne. 0)  print*, "TimeStep--following steps: dgesv sagt info=", info ! TODO
+         dVn_local_error = dVl(1:this%sizev)
+         ! ------------------------------------------------------------------------------------
+         ! ------------------------------------------------------------------------------------
+         ! ------------------------------------------------------------------------------------
+         ! ------------------------------------------------------------------------------------
+
+         Vn_local_error = this%v
+         do j = 1,i-2
+            Vn_local_error = Vn_local_error + h * this%half_explicit_variable_step_coeff(j) * dVn(j,:)
+         end do
+         Vn_local_error = Vn_local_error + h * this%half_explicit_variable_step_coeff(i-1) * dVn_local_error
+
+         tmpq = Qn(this%half_explicit_s+1,:)
+         tmpv = Vn(this%half_explicit_s+1,:)
+         this%local_est_err(1:this%sizeq) = abs(tmpq - Qn_local_error)
+         this%local_est_err(this%sizeq+1:this%sizeq+this%sizev) = abs(tmpv - Vn_local_error)
+
+         this%err = 0.0_8
+         ! evaluate local error
+         do j = 1,this%sizeq+this%sizev
+            if (j < this%sizeq + 1) then
+               this%err = this%err + ((Qn(this%half_explicit_s+1,j)-Qn_local_error(j))/(this%opts%atol + max(abs(Qn(this%half_explicit_s+1,j)),abs(Qn(1,j))) * this%opts%rtol))**2
+            else
+               this%err = this%err + ((Vn(this%half_explicit_s+1,j-this%sizeq)-Vn_local_error(j-this%sizeq))/(this%opts%atol + max(abs(Vn(this%half_explicit_s+1,j-this%sizeq)),abs(Vn(1,j-this%sizeq))) * this%opts%rtol))**2
+            end if
+         end do
+         this%err = sqrt(this%err / (this%sizeq + this%sizev))
+         if ( this%opts%step_size_control .and. (this%err > 1) ) then
+            accepted_step = .false.
+         elseif ( this%opts%step_size_control .and. (this%err .le. 1) ) then
+            accepted_step = .true.
+         end if
+      end if
+
       if ( accepted_step ) then
          this%q = Qn(this%half_explicit_s+1,:)
          this%v = Vn(this%half_explicit_s+1,:)
