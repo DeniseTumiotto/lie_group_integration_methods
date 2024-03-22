@@ -75,7 +75,11 @@ for i = 1:size_s
     ylabel('$\Vert\Phi(R,x)\Vert_2$','FontSize',14,'Interpreter','latex')
     legend('Location','best','AutoUpdate','on')
     grid on
-    plot(sols{i}.rslt.t,vecnorm(sols{i}.rslt.Phi),'DisplayName',['a = ' num2str(sols{i}.a_baumgarte)],'LineWidth',1.5)
+    if sols{i}.stab_proj ~= 0
+        plot(sols{i}.rslt.t,vecnorm(sols{i}.rslt.Phi),'DisplayName',['stab = ' num2str(sols{i}.stab2)],'LineWidth',1.5)
+    else
+        plot(sols{i}.rslt.t,vecnorm(sols{i}.rslt.Phi),'DisplayName',['a = ' num2str(sols{i}.a_baumgarte)],'LineWidth',1.5)
+    end
 end
 
 end

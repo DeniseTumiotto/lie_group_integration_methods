@@ -75,7 +75,10 @@ axe.ZLim = [-1.1, 1.1];
 axe.Title.String = [name ': t=', num2str(tt(1),'%.2f')];
 
 % Loop over intermediate time points
-for i=1:length(tt)
+if ~exist('alt','var')
+    alt = 1;
+end
+for i=1:alt:length(tt)
    % Update date of the plot
    plt.XData = XX(1,1:i);
    plt.YData = XX(2,1:i);
