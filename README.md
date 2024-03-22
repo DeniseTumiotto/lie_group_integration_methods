@@ -1,6 +1,6 @@
 # Numerical time integrators on Lie groups
 The original code and content of this repository was developed by Stefan Hante and can be found at [StHante Homepage](https://github.com/StHante).
-The following code may suffer from modification and has been extended.
+The code in the present repository has been extended and/or modified.
 
 The repository is organized as follow.
 
