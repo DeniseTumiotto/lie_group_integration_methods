@@ -11,19 +11,19 @@ Integrators:
  * The Lie group RATTLE method `RATTLie` (Stefan Hante)
  * The Lie group SHAKE method `SHAKELie` (Stefan Hante)
  * The nonholonomic RATTLie method `RATTLie_nonhol` (Stefan Hante)
- * The half-explicit Runge-Kutta Lie group methods `half_explicit`
+ * The half-explicit Runge-Kutta Lie group methods `half_explicit` (Denise Tumiotto)
 
 Test problems:
 
- * The (multiple) heavy top example `heavy_top`
- * The constrained Cosserat beam model `crmS3R3`
- * The rolling disk example `rolling_disk`
+ * The (multiple) heavy top example `heavy_top` (Stefan Hante and Denise Tumiotto)
+ * The constrained Cosserat beam model `crmS3R3` (Stefan Hante and Denise Tumiotto)
+ * The rolling disk example `rolling_disk` (Stefan Hante)
 
 Miscellaneous:
 
- * Implementation of Lie group functions `liegroup`
- * Expand a config file with different configurations to several files `expandconfig`
- * Read lua files in Matlab and Octave `readLua`
+ * Implementation of Lie group functions `liegroup` (Stefan Hante)
+ * Expand a config file with different configurations to several files `expandconfig` (Stefan Hante)
+ * Read lua files in Matlab and Octave `readLua` (Stefan Hante)
 
 Third party projects:
 
