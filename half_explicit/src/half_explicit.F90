@@ -410,6 +410,7 @@ module half_explicit
       ! internal integer variables
       integer                           :: i    ! for iteration
       integer                           :: j    ! for iteration
+      integer                           :: iter ! for iteration in while loop
       integer, dimension(this%sizev+this%sizel)    :: ipiv ! pivot vector for dgesv
       integer                           :: info ! info flag for dgesv
       logical                           :: accepted_step = .true.
@@ -437,6 +438,7 @@ module half_explicit
       real(8), dimension(this%sizev) :: tmpv
       real(8), dimension(this%sizev) :: tmpt
       real(8), dimension(this%sizel) :: tmpl
+      real(8), dimension(this%sizev+this%sizel) :: residual
       
       ! calculation of step size $h$
       h = t1 - this%t
@@ -445,7 +447,10 @@ module half_explicit
       Thetan(1,1:this%sizev) = 0.0_8
       Qn(1,1:this%sizeq) = this%q
       Vn(1,1:this%sizev) = this%v
-      dThetan(1,:) = matmul(transpose(this%half_explicit_Tg_inv_T(Thetan(1,:))), Vn(1,:))
+      tmpq = Qn(1,:)
+      tmpv = Vn(1,:)
+      tmpt = Thetan(1,:)
+      dThetan(1,:) = matmul(transpose(this%half_explicit_Tg_inv_T(tmpt)), tmpv)
       Lambdan(1,:) = this%l
       ! calculate $\dotV_{m1}$ --> dVn(1,:)
       ! 1. MASS MATRIX
@@ -455,7 +460,7 @@ module half_explicit
          if (this%opts%const_mass_matrix == 1) then
             M(1:this%sizev, 1) = this%half_explicit_const_diag_M
          else
-            M(1:this%sizev, 1) = this%half_explicit_diag_M(Qn(1,:))
+            M(1:this%sizev, 1) = this%half_explicit_diag_M(tmpq)
          end if
          do concurrent (i=2:this%sizev)
             M(i,i) = M(i,1)
@@ -465,7 +470,7 @@ module half_explicit
          if (this%opts%const_mass_matrix == 1) then
             M(:,:) = this%half_explicit_const_M
          else
-            M(:,:) = this%half_explicit_M(Qn(1,:))
+            M(:,:) = this%half_explicit_M(tmpq)
          end if
       end if
       ! we need to solve a linear equation, first calulate the rhs
@@ -623,6 +628,35 @@ module half_explicit
                   ! if (info .ne. 0)  print*, "TimeStep--following steps: dgesv sagt info=", info ! TODO
          tmpt = tmpt + dVl(1:this%sizev)
          Qn(this%half_explicit_s+1,:) = this%half_explicit_qlpexphDqtilde(this%q, 1.0_8, tmpt)
+         tmpq = Qn(this%half_explicit_s+1,:)
+         residual(1:this%sizev) = 0.0_8
+         residual(this%sizev+1:this%sizev+this%sizel) = -this%half_explicit_phi(tmpq)
+         iter = 1
+         do while ( (norm2(residual) > this%opts%atol + this%opts%rtol * norm2(dVl)) .or. (iter < this%opts%imax) )
+            tmpq = Qn(this%half_explicit_s+1,:)
+            B1 = this%half_explicit_B(tmpq)
+            MBB0(this%sizev+1:this%sizev+this%sizel, 1:this%sizev) = matmul(B1,this%half_explicit_Tg(1.0_8, tmpt))
+            ! right hand side
+            dVl(1:this%sizev) = 0.0_8
+            dVl(this%sizev+1:this%sizev+this%sizel) = -this%half_explicit_phi(tmpq)
+            ! then solve the system
+            call dgesv(                       &! solve the System A*X=B and save the result in B
+                       this%sizev+this%sizel, &! number of linear equations (=size(A,1))      ! Vorsicht: double precision muss real(8) sein, sonst gibt es Probleme
+                       1,                     &! number of right hand sides (=size(B,2))
+                       MBB0,                  &! matrix A
+                       this%sizev+this%sizel, &! leading dimension of A, in this case is equal to the number of linear equations (=size(A,1))
+                       ipiv,                  &! integer pivot vector; it is not needed
+                       dVl,                   &! matrix B
+                       this%sizev+this%sizel, &! leading dimension of B,  in this case is equal to the number of linear equations (=size(B,1)=size(A,1))
+                       info)                   ! integer information flag
+                     ! if (info .ne. 0)  print*, "TimeStep--following steps: dgesv sagt info=", info ! TODO
+            tmpt = tmpt + dVl(1:this%sizev)
+            Qn(this%half_explicit_s+1,:) = this%half_explicit_qlpexphDqtilde(this%q, 1.0_8, tmpt)
+            tmpq = Qn(this%half_explicit_s+1,:)
+            residual(1:this%sizev) = 0.0_8
+            residual(this%sizev+1:this%sizev+this%sizel) = -this%half_explicit_phi(tmpq)
+            iter = iter + 1
+         end do
       end if
 
       if ( (this%opts%local_error_control) .or. (this%opts%step_size_control) ) then
@@ -764,6 +798,9 @@ module half_explicit
       real(8), dimension(this%half_explicit_s,   this%sizev) :: dVn
       real(8), dimension(                        this%sizev) :: Thetan_local_error
       real(8), dimension(this%sizev,  this%sizev) :: M
+      real(8), dimension(this%sizeq) :: tmpq
+      real(8), dimension(this%sizev) :: tmpv
+      real(8), dimension(this%sizev) :: tmpt
 
       ! internal logical variables
 
@@ -773,13 +810,16 @@ module half_explicit
       Thetan(1,1:this%sizev) = 0.0_8
       Qn(1,1:this%sizeq) = this%q
       Vn(1,1:this%sizev) = this%v
-      dThetan(1,:) = matmul(transpose(this%half_explicit_Tg_inv_T(Thetan(1,:))), Vn(1,:))
+      tmpt = Thetan(1,:)
+      tmpq = Qn(1,:)
+      tmpv = Vn(1,:)
+      dThetan(1,:) = matmul(transpose(this%half_explicit_Tg_inv_T(tmpt)), tmpv)
       ! calculate $\dotV_{m1}$ --> dVn(1,:)
       if (this%opts%diag_mass_matrix == 1) then
          if (this%opts%const_mass_matrix == 1) then
-            dVn(1,:) = -this%half_explicit_g(Qn(1,:), Vn(1,:), this%t + this%half_explicit_c(1)*h)/this%half_explicit_const_diag_M
+            dVn(1,:) = -this%half_explicit_g(tmpq, tmpv, this%t + this%half_explicit_c(1)*h)/this%half_explicit_const_diag_M
          else
-            dVn(1,:) = -this%half_explicit_g(Qn(1,:), Vn(1,:), this%t + this%half_explicit_c(1)*h)/this%half_explicit_diag_M(Qn(1,:))
+            dVn(1,:) = -this%half_explicit_g(tmpq, tmpv, this%t + this%half_explicit_c(1)*h)/this%half_explicit_diag_M(tmpq)
          end if
          ! count calls
          this%half_explicit_stats%ngcalls = this%half_explicit_stats%ngcalls + 1
@@ -787,10 +827,10 @@ module half_explicit
          if (this%opts%const_mass_matrix == 1) then
             M(:,:) = this%half_explicit_const_M
          else
-            M(:,:) = this%half_explicit_M(Qn(1,:))
+            M(:,:) = this%half_explicit_M(tmpq)
          end if
          ! we need to solve a linear equation, first calulate the rhs
-         dVn(1,:) = -this%half_explicit_g(Qn(1,:), Vn(1,:), this%t + this%half_explicit_c(1)*h)
+         dVn(1,:) = -this%half_explicit_g(tmpq, tmpv, this%t + this%half_explicit_c(1)*h)
          ! count calls
          this%half_explicit_stats%ngcalls = this%half_explicit_stats%ngcalls + 1
          ! then solve the system
@@ -815,15 +855,18 @@ module half_explicit
             Thetan(i,:)=Thetan(i,:) + h * this%half_explicit_A(i,j) * dThetan(j,:)
             Vn(i,:) = Vn(i,:) + h * this%half_explicit_A(i,j) * dVn(j,:)
          end do
-         Qn(i,:) = this%half_explicit_qlpexphDqtilde(this%q, 1.0_8, Thetan(i,:))
+         tmpt = Thetan(i,:)
+         tmpv = Vn(i,:)
+         Qn(i,:) = this%half_explicit_qlpexphDqtilde(this%q, 1.0_8, tmpt)
+         tmpq = Qn(i,:)
          if ( i < this%half_explicit_s + 1 ) then
-            dThetan(i,:) = matmul(transpose(this%half_explicit_Tg_inv_T(Thetan(i,:))), Vn(i,:))
+            dThetan(i,:) = matmul(transpose(this%half_explicit_Tg_inv_T(tmpt)), tmpv)
             ! calculate $\dotV_{m,i}$ --> dVn(i,:)
             if (this%opts%diag_mass_matrix == 1) then
                if (this%opts%const_mass_matrix == 1) then
-                  dVn(i,:) = -this%half_explicit_g(Qn(i,:), Vn(i,:), this%t + this%half_explicit_c(i)*h)/this%half_explicit_const_diag_M
+                  dVn(i,:) = -this%half_explicit_g(tmpq, tmpv, this%t + this%half_explicit_c(i)*h)/this%half_explicit_const_diag_M
                else
-                  dVn(i,:) = -this%half_explicit_g(Qn(i,:), Vn(i,:), this%t + this%half_explicit_c(i)*h)/this%half_explicit_diag_M(Qn(i,:))
+                  dVn(i,:) = -this%half_explicit_g(tmpq, tmpv, this%t + this%half_explicit_c(i)*h)/this%half_explicit_diag_M(tmpq)
                end if
                ! count calls
                this%half_explicit_stats%ngcalls = this%half_explicit_stats%ngcalls + 1
@@ -831,10 +874,10 @@ module half_explicit
                if (this%opts%const_mass_matrix == 1) then
                   M(:,:) = this%half_explicit_const_M
                else
-                  M(:,:) = this%half_explicit_M(Qn(i,:))
+                  M(:,:) = this%half_explicit_M(tmpq)
                end if
                ! we need to solve a linear equation, first calulate the rhs
-               dVn(i,:) = -this%half_explicit_g(Qn(i,:), Vn(i,:), this%t + h * this%half_explicit_c(i))
+               dVn(i,:) = -this%half_explicit_g(tmpq, tmpv, this%t + h * this%half_explicit_c(i))
                ! count calls
                this%half_explicit_stats%ngcalls = this%half_explicit_stats%ngcalls + 1
                ! then solve the system
