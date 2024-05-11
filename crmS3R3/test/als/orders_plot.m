@@ -39,6 +39,7 @@ for i = 1:the_size
                 ax.FontSize = 14;
                 ax.PlotBoxAspectRatio = [1 1 1];
                 set(gca, 'XScale', 'log', 'YScale', 'log')
+                axis([10^-4 10^-2 10^-15 10^-4])
                 title('Roll-up maneuver','FontSize',14)
                 xlabel('Time step size (h)','FontSize',14)
                 ylabel('Global error','FontSize',14)
@@ -51,6 +52,7 @@ for i = 1:the_size
                 ax.FontSize = 14;
                 ax.PlotBoxAspectRatio = [1 1 1];
                 set(gca, 'XScale', 'log', 'YScale', 'log')
+                axis([10^-4 10^-2 10^-15 10^-4])
                 title('Flying spaghetti','FontSize',14)
                 xlabel('Time step size (h)','FontSize',14)
                 ylabel('Global error','FontSize',14)
@@ -69,6 +71,7 @@ for i = 1:the_size
                 ax.FontSize = 14;
                 ax.PlotBoxAspectRatio = [1 1 1];
                 set(gca, 'XScale', 'log', 'YScale', 'log')
+                axis([10^-4 10^-2 10^-15 10^-4])
                 title('Roll-up maneuver','FontSize',14)
                 xlabel('Time step size (h)','FontSize',14)
                 ylabel('Global error','FontSize',14)
@@ -82,6 +85,7 @@ for i = 1:the_size
                 ax.FontSize = 14;
                 ax.PlotBoxAspectRatio = [1 1 1];
                 set(gca, 'XScale', 'log', 'YScale', 'log')
+                axis([10^-4 10^-2 10^-15 10^-4])
                 title('Flying spaghetti','FontSize',14)
                 xlabel('Time step size (h)','FontSize',14)
                 ylabel('Global error','FontSize',14)
@@ -95,6 +99,7 @@ for i = 1:the_size
             ax.FontSize = 14;
             ax.PlotBoxAspectRatio = [1 1 1];
             set(gca, 'XScale', 'log', 'YScale', 'log')
+            axis([10^-4 10^-2 10^-15 10^-4])
             if length(my_var) == 1
                 title(['Order of convergence, ' my_var],'FontSize',14)
             else
