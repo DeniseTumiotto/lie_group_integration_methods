@@ -13,6 +13,10 @@ function max_phi_vs_h(sols, feature, side)
         side = 0;
     end
 
+    if isempty(feature)
+        feature = 'a_baumgarte';
+    end
+
     size_s = max(size(sols));
 
     if ~isfield(sols{1},'h')
@@ -25,6 +29,23 @@ function max_phi_vs_h(sols, feature, side)
     for i = 1:size_s
         if strcmp(feature,'a_baumgarte')
             if side
+                if ~exist('n_fig','var')
+                    figure()
+                    n_fig = get(gcf,'Number');
+                else
+                    figure(n_fig)
+                end
+                k = find(spaces==sols{i}.problemset);
+                if isempty(k)
+                    spaces = [spaces sols{i}.problemset];
+                    subplot(1,2,length(spaces))
+                    plt{length(spaces)} = loglog(sols{i}.h, max(vecnorm(sols{i}.rslt.Phi)), '-', ...
+                        'DisplayName', num2str(sols{i}.problemset), 'LineWidth', 1.5);
+                else
+                    subplot(1,2,k)
+                    plt{k}.XData = [plt{k}.XData sols{i}.h];
+                    plt{k}.YData = [plt{k}.YData max(vecnorm(sols{i}.rslt.Phi))];
+                end
             else
                 j = find(spaces==sols{i}.problemset);
                 if isempty(j)
@@ -39,8 +60,6 @@ function max_phi_vs_h(sols, feature, side)
                     else
                         plt{length(spaces),k} = loglog(sols{i}.h, max(vecnorm(sols{i}.rslt.Phi)), 'o-', ...
                             'DisplayName', ['$\gamma$ = ' num2str(sols{i}.a_baumgarte)], 'LineWidth', 1.5);
-                        % plt{length(spaces),k}.XData = [plt{length(spaces),k}.XData sols{i}.h];
-                        % plt{length(spaces),k}.YData = [plt{length(spaces),k}.YData max(vecnorm(sols{i}.rslt.Phi))];
                     end
                 else
                     figure(j)
@@ -68,8 +87,7 @@ function max_phi_vs_h(sols, feature, side)
         ax=gca;
         ax.FontSize = 14;
         ax.PlotBoxAspectRatio = [1 1 1];
-        set(gca, 'YScale', 'log')
-        set(gca, 'XScale', 'log')
+        set(gca, 'YScale', 'log', 'XScale', 'log')
         switch sols{i}.liegroup
             case 1 % SO(3)
                 disp('function not implemented for SO(3)')

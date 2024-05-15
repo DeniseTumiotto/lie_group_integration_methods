@@ -25,8 +25,8 @@ end
 
 % Error functions
 norm2 = @(x) sqrt(sum(x.^2,1)/size(x,1));
-abserr = @(x,xref) max(norm2(x-xref));
-relerr = @(x,xref) max(norm2(x-xref)./norm2(xref));
+abserr = @(x,xref) max(norm2(x(:,end)-xref(:,end)));
+relerr = @(x,xref) max(norm2(x(:,end)-xref(:,end))./norm2(xref(:,end)));
 
 % Refconfig
 refconfig = rmfield(ref, 'rslt');

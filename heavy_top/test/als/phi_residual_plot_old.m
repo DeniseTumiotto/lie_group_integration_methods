@@ -222,7 +222,7 @@ function phi_residual_plot(sols, varargin)
         ax.FontSize = 14;
         ax.PlotBoxAspectRatio = [1 1 1];
         if overlap
-            title(['Constraint residual vs time (t)'],'FontSize',14,'Interpreter','latex')
+            title('Constraint residual vs time (t)','FontSize',14,'Interpreter','latex')
         else
             title(['Constraint residual in ', space],'FontSize',14,'Interpreter','latex')
         end
@@ -230,7 +230,7 @@ function phi_residual_plot(sols, varargin)
         ylabel('$\Vert\Phi(R,x)\Vert_2$','FontSize',14,'Interpreter','latex')
         grid on
         plot(sols{i}.rslt.t, vecnorm(sols{i}.rslt.Phi), 'DisplayName', [line_name feature '=' num2str(sols{i}.(feature))], 'LineWidth', 1.5)
-        legend('Location','best','AutoUpdate','on')
+        legend('Location','best','AutoUpdate','on','Interpreter','latex')
     end
 
 end
