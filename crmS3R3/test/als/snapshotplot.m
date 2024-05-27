@@ -29,7 +29,7 @@ if ~exist('bw','var')
     bw = 0;
 end
 
-ts =  sol.rslt.t(1:ceil(length(sol.rslt.t)/stride):end);
+ts =  [sol.rslt.t(1:ceil(length(sol.rslt.t)/stride):end) sol.rslt.t(end)];
 
 if traj_extr
     if sol.fixed_x0 == 0 && sol.fixed_p0 == 0
@@ -45,9 +45,9 @@ end
 if bw
     color = linspecer(stride+3,'gray');
 else
-    color = linspecer(stride);
+    color = linspecer(stride+1);
 end
-for it=1:stride
+for it=1:stride+1
    t = ts(it);
 
    % Minimal index
@@ -61,19 +61,22 @@ for it=1:stride
 end
 ax=gca;
 ax.FontSize = 16;
-
+ax.DataAspectRatio = [1,1,1];
+box on
 if strcmp(sol.problem_name,'roll-up')
     view([0 -1 0])
+    ax.XLim = [-4, 10];
+    ax.ZLim = [-6, 2];
 elseif strcmp(sol.problem_name,'flying_spaghetti')
     view([22.103969891487075,21.233658241582319])
 else
     view(2)
 end
 
-legend('FontSize', 16, 'Location','best');
-xlabel('x', 'FontSize', 24);
-ylabel('y', 'FontSize', 24);
-zlabel('z', 'FontSize', 24);
+legend('FontSize', 16, 'Location','southeast');
+xlabel('$x$', 'FontSize', 24, 'Interpreter', 'latex');
+ylabel('$y$', 'FontSize', 24, 'Interpreter', 'latex');
+zlabel('$z$', 'FontSize', 24, 'Interpreter', 'latex');
 
 grid off;
 grid on;

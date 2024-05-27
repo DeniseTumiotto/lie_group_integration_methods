@@ -47,9 +47,9 @@ function orders_plot(sols, varargin)
                 ax.XLim = [1e-4 1e-2];
                 ax.YLim = [1e-10 1e0];
                 ax.XTick = [1e-4 1e-3 1e-2];
-                ax.XTickLabel = ['10^{-4}', '10^{-3}', '10^{-2}'];
+                ax.XTickLabel = {'10^{-4}' '10^{-3}' '10^{-2}'};
                 ax.YTick = [1e-10 1e-8 1e-6 1e-4 1e-2 1e0];
-                ax.YTickLabel = ['10^{-10}', '10^{-8}', '10^{-6}', '10^{-4}', '10^{-2}', '10^{0}'];
+                ax.YTickLabel = {'10^{-10}', '10^{-8}', '10^{-6}', '10^{-4}', '10^{-2}', '10^{0}'};
                 set(gca, 'XScale', 'log', 'YScale', 'log')
                 % axis([10^-4 10^-2 10^-15 10^-4])
                 title('\bf{Convergence order: $q$}','FontSize',14, 'Interpreter', 'latex')
@@ -68,9 +68,9 @@ function orders_plot(sols, varargin)
                 ax.XLim = [1e-4 1e-2];
                 ax.YLim = [1e-8 1e2];
                 ax.XTick = [1e-4 1e-3 1e-2];
-                ax.XTickLabel = ['10^{-4}', '10^{-3}', '10^{-2}'];
+                ax.XTickLabel = {'10^{-4}', '10^{-3}', '10^{-2}'};
                 ax.YTick = [1e-8 1e-6 1e-4 1e-2 1e0 1e2];
-                ax.YTickLabel = ['10^{-8}', '10^{-6}', '10^{-4}', '10^{-2}', '10^{0}', '10^{2}'];
+                ax.YTickLabel = {'10^{-8}', '10^{-6}', '10^{-4}', '10^{-2}', '10^{0}', '10^{2}'};
                 set(gca, 'XScale', 'log', 'YScale', 'log')
                 % axis([10^-4 10^-2 10^-15 10^-4])
                 title('\bf{Convergence order: $\lambda$}','FontSize',14, 'Interpreter', 'latex')
@@ -90,9 +90,9 @@ function orders_plot(sols, varargin)
                 ax.XLim = [1e-4 1e-2];
                 ax.YLim = [1e-10 1e0];
                 ax.XTick = [1e-4 1e-3 1e-2];
-                ax.XTickLabel = ['10^{-4}', '10^{-3}', '10^{-2}'];
+                ax.XTickLabel = {'10^{-4}', '10^{-3}', '10^{-2}'};
                 ax.YTick = [1e-10 1e-8 1e-6 1e-4 1e-2 1e0];
-                ax.YTickLabel = ['10^{-10}', '10^{-8}', '10^{-6}', '10^{-4}', '10^{-2}', '10^{0}'];
+                ax.YTickLabel = {'10^{-10}', '10^{-8}', '10^{-6}', '10^{-4}', '10^{-2}', '10^{0}'};
                 set(gca, 'XScale', 'log', 'YScale', 'log')
                 % axis([10^-4 10^-2 10^-15 10^-4])
                 title('\bf{Convergence order: $q$}','FontSize',14, 'Interpreter', 'latex')
@@ -111,9 +111,9 @@ function orders_plot(sols, varargin)
                 ax.XLim = [1e-4 1e-2];
                 ax.YLim = [1e-8 1e2];
                 ax.XTick = [1e-4 1e-3 1e-2];
-                ax.XTickLabel = ['10^{-4}', '10^{-3}', '10^{-2}'];
+                ax.XTickLabel = {'10^{-4}', '10^{-3}', '10^{-2}'};
                 ax.YTick = [1e-8 1e-6 1e-4 1e-2 1e0 1e2];
-                ax.YTickLabel = ['10^{-8}', '10^{-6}', '10^{-4}', '10^{-2}', '10^{0}', '10^{2}'];
+                ax.YTickLabel = {'10^{-8}', '10^{-6}', '10^{-4}', '10^{-2}', '10^{0}', '10^{2}'};
                 set(gca, 'XScale', 'log', 'YScale', 'log')
                 % axis([10^-4 10^-2 10^-15 10^-4])
                 title('\bf{Convergence order: $\lambda$}','FontSize',14, 'Interpreter', 'latex')
@@ -138,9 +138,9 @@ function orders_plot(sols, varargin)
                 ax.XLim = [1e-4 1e-2];
                 ax.YLim = [1e-10 1e0];
                 ax.XTick = [1e-4 1e-3 1e-2];
-                ax.XTickLabel = ['10^{-4}', '10^{-3}', '10^{-2}'];
+                ax.XTickLabel = {'10^{-4}', '10^{-3}', '10^{-2}'};
                 ax.YTick = [1e-10 1e-8 1e-6 1e-4 1e-2 1e0];
-                ax.YTickLabel = ['10^{-10}', '10^{-8}', '10^{-6}', '10^{-4}', '10^{-2}', '10^{0}'];
+                ax.YTickLabel = {'10^{-10}', '10^{-8}', '10^{-6}', '10^{-4}', '10^{-2}', '10^{0}'};
                 set(gca, 'XScale', 'log', 'YScale', 'log')
                 % axis([10^-4 10^-2 10^-15 10^-4])
                 title('\bf{Convergence order: $q$}','FontSize',14, 'Interpreter', 'latex')
@@ -159,9 +159,9 @@ function orders_plot(sols, varargin)
                 ax.XLim = [1e-4 1e-2];
                 ax.YLim = [1e-8 1e2];
                 ax.XTick = [1e-4 1e-3 1e-2];
-                ax.XTickLabel = ['10^{-4}', '10^{-3}', '10^{-2}'];
+                ax.XTickLabel = {'10^{-4}', '10^{-3}', '10^{-2}'};
                 ax.YTick = [1e-8 1e-6 1e-4 1e-2 1e0 1e2];
-                ax.YTickLabel = ['10^{-8}', '10^{-6}', '10^{-4}', '10^{-2}', '10^{0}', '10^{2}'];
+                ax.YTickLabel = {'10^{-8}', '10^{-6}', '10^{-4}', '10^{-2}', '10^{0}', '10^{2}'};
                 set(gca, 'XScale', 'log', 'YScale', 'log')
                 % axis([10^-4 10^-2 10^-15 10^-4])
                 title('\bf{Convergence order: $\lambda$}','FontSize',14, 'Interpreter', 'latex')
@@ -182,9 +182,9 @@ function orders_plot(sols, varargin)
                     ax.XLim = [1e-4 1e-2];
                     ax.YLim = [1e-10 1e0];
                     ax.XTick = [1e-4 1e-3 1e-2];
-                    ax.XTickLabel = ['10^{-4}', '10^{-3}', '10^{-2}'];
+                    ax.XTickLabel = {'10^{-4}', '10^{-3}', '10^{-2}'};
                     ax.YTick = [1e-10 1e-8 1e-6 1e-4 1e-2 1e0];
-                    ax.YTickLabel = ['10^{-10}', '10^{-8}', '10^{-6}', '10^{-4}', '10^{-2}', '10^{0}'];
+                    ax.YTickLabel = {'10^{-10}', '10^{-8}', '10^{-6}', '10^{-4}', '10^{-2}', '10^{0}'};
                     set(gca, 'XScale', 'log', 'YScale', 'log')
                     % axis([10^-4 10^-2 10^-15 10^-4])
                     title('\bf{Convergence order: $q$}','FontSize',14, 'Interpreter', 'latex')
@@ -203,9 +203,9 @@ function orders_plot(sols, varargin)
                     ax.XLim = [1e-4 1e-2];
                     ax.YLim = [1e-8 1e2];
                     ax.XTick = [1e-4 1e-3 1e-2];
-                    ax.XTickLabel = ['10^{-4}', '10^{-3}', '10^{-2}'];
+                    ax.XTickLabel = {'10^{-4}', '10^{-3}', '10^{-2}'};
                     ax.YTick = [1e-8 1e-6 1e-4 1e-2 1e0 1e2];
-                    ax.YTickLabel = ['10^{-8}', '10^{-6}', '10^{-4}', '10^{-2}', '10^{0}', '10^{2}'];
+                    ax.YTickLabel = {'10^{-8}', '10^{-6}', '10^{-4}', '10^{-2}', '10^{0}', '10^{2}'};
                     set(gca, 'XScale', 'log', 'YScale', 'log')
                     % axis([10^-4 10^-2 10^-15 10^-4])
                     title('\bf{Convergence order: $\lambda$}','FontSize',14, 'Interpreter', 'latex')
