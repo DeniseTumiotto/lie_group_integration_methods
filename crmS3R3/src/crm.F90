@@ -832,7 +832,7 @@ module testprobcrm
                end if
             end if
             tmpv = &
-#if !defined(INT_RATTLie) && !defined(INT_SHAKELie) && !defined(INT_varint4lie) && !defined(INT_half_explicit)
+#if !defined(INT_RATTLie) && !defined(INT_SHAKELie) && !defined(INT_varint4lie)
                hat_tr_mult_s3sdr3(tmpv, dsscrM*tmpv/2)  &
 #endif
                + tan_tr_inv_mult_s3sdr3(-ds*w(1:6), scrC*(w(1:6) - majE) + 2*scrCd*wd(1:6))
@@ -855,7 +855,7 @@ module testprobcrm
             ! Right hand side for v_k
             for(i,1,this%n-1)
                rslt(6*i-r+1:6*i-r+6) = &
-#if !defined(INT_RATTLie) && !defined(INT_SHAKELie) && !defined(INT_varint4lie) && !defined(INT_half_explicit)
+#if !defined(INT_RATTLie) && !defined(INT_SHAKELie) && !defined(INT_varint4lie)
                   hat_tr_mult_s3sdr3(v(6*i-r+1:6*i-r+6), dsscrM*v(6*i-r+1:6*i-r+6))   &
 #endif
                    + tan_tr_inv_mult_s3sdr3(-ds*w(6*i+1:6*i+6), scrC*(w(6*i+1:6*i+6) - majE) + 2*scrCd*wd(6*i+1:6*i+6)) &
@@ -881,7 +881,7 @@ module testprobcrm
                end if
             end if
             tmpv = &
-#if !defined(INT_RATTLie) && !defined(INT_SHAKELie) && !defined(INT_varint4lie) && !defined(INT_half_explicit)
+#if !defined(INT_RATTLie) && !defined(INT_SHAKELie) && !defined(INT_varint4lie)
                hat_tr_mult_s3sdr3(tmpv, dsscrM*tmpv/2)   &
 #endif
                 - tan_tr_inv_mult_s3sdr3( ds*w(6*i-5:6*i ), scrC*(w(6*i-5:6*i  ) - majE) + 2*scrCd*wd(6*i-5:6*i  ))

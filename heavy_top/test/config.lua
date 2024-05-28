@@ -1,17 +1,16 @@
--- In order to make this a little easier to control
-
 -- Integration interval
 t0 = 0
-te = 100
--- h  = 0.001
+te = 10
 -- number of integration steps
--- steps = math.ceil((te-t0)*2^[--[ 10 || 11 || 12 || 13 || 14 || 15 || 18 ]])
-steps = math.ceil((te-t0)*2^12)
+steps = math.ceil((te-t0)*2^[[ 10 || 11 || 12 || 13 || 14 ]])
+-- steps = math.ceil((te-t0)*2^10)
+h = steps^-1 * (te-t0)
+-- h  = [--[ 0.01 || 0.001 || 0.0001 || 0.00001 ]]
 -- steps = math.ceil((te-t0)*h^-1)
 
--- problemset = 61
-problemset = [[ 33 || 53 ]]
--- problemset = [--[ 31 || 32 || 33 || 34 ]]
+-- problemset = [--[ 31 || 33 || 51 || 53 ||
+--                 41 || 43 || 61 || 63 ]]
+problemset = [[ 33 || 43 || 53 || 63 ]]
 -- problemset = [--[ 10
 --              || 20
 --              || 31 || 32 || 33 || 34
@@ -37,6 +36,34 @@ problemset = [[ 33 || 53 ]]
 --  +3: stabilized index-2 formulation, using no_K and no_D
 --  +4: stabilized index-2 formulation
 
+-- Use stabilized index-2 formulation (only applies to the constrained case)
+if problemset > 0 then
+   if problemset % 10 == 3 or problemset % 10 == 4 then
+      stab2 = 1
+      -- Baumgarte parameter
+      -- my_C = [--[ 1. || 0.01 || 0.001 ]]
+      my_C = 1.
+      -- a_baumgarte = my_C / h
+      a_baumgarte = [[ 1. || 10. || 100. ]]
+      -- Use iterative projection
+      stab_proj = 0
+   else
+      stab2 = 0
+      -- Baumgarte parameter
+      my_C = 0
+      a_baumgarte = 0.
+      -- Use iterative projection
+      stab_proj = 0
+   end
+else
+   -- this may be changed when problemset == -1
+   stab2 = 0
+   -- Baumgarte parameter
+   my_C = 0
+   a_baumgarte = 0.
+   -- Use iterative projection
+   stab_proj = 0
+end
 
 -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- --
 -- -- -- Problem options   -- -- -- -- -- -- -- -- -- -- -- --
@@ -85,7 +112,7 @@ end
 --  2: Output in terms of SO(3) x R^3
 output_type = 1
 -- Output only at certain times
-output_t_at = 1
+output_t_at = 0
 t_output_at_multiples_of = 1/2^8
 
 -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- --
@@ -174,7 +201,7 @@ k_bdf = 2
 -- local_error_control = false
 -- step_size_control = false
 
--- -- Automatic step size control HEDOP5 (kirchhoff = 1 --> constrained)
+-- Automatic step size control HEDOP5 (kirchhoff = 1 --> constrained)
 A = {   0.,          0.,         0.,         0.,          0.,    0., 0.,
        1/5,          0.,         0.,         0.,          0.,    0., 0.,
       3/40,        9/40,         0.,         0.,          0.,    0., 0.,
@@ -241,21 +268,5 @@ imax = 100
 
 -- Integration interval and step size (see top of the file)
 
--- Use stabilized index-2 formulation (only applies to the constrained case)
-if problemset > 0 then
-   if problemset % 10 == 3 or problemset % 10 == 4 then
-      stab2 = 1
-   else
-      stab2 = 0
-   end
-else
-   -- this may be changed when problemset == -1
-   stab2 = 0
-end
--- Baumgarte parameter
-my_C = 1
--- a_baumgarte = my_C / h
-a_baumgarte = [[ 0. || 10. || 100. ]]
--- a_baumgarte = 0.
--- Use iterative projection
-stab_proj = 0
+
+
