@@ -173,6 +173,10 @@ program main
       call error_check(conf, iError, 'order_step_control')
       print *, 'order_step_control = ', prob%GL(INTEGRATOR)_order_variable_step
 
+      call aot_get_val(L = conf, key = 'update_a', val = prob%opts%update_a, ErrCode = iError)
+      call error_check(conf, iError, 'update_a')
+      print *, 'update_a = ', prob%opts%update_a
+
    end if
 #endif
 

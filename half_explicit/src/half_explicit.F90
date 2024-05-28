@@ -44,6 +44,7 @@ module half_explicit
       real(8) :: te = 1.0_8
       logical :: step_size_control = .false.
       logical :: local_error_control = .false.
+      logical :: update_a = .false.
       integer :: nsteps = 100
       real(8) :: facmax = 5.0_8
       real(8) :: facmin = 0.1_8
@@ -632,7 +633,7 @@ module half_explicit
          residual(1:this%sizev) = 0.0_8
          residual(this%sizev+1:this%sizev+this%sizel) = -this%half_explicit_phi(tmpq)
          iter = 1
-         do while ( (norm2(residual) > this%opts%atol + this%opts%rtol * norm2(dVl)) .or. (iter < this%opts%imax) )
+         do while ( (norm2(residual) > this%opts%atol + this%opts%rtol * norm2(dVl)) .or. (iter <= this%opts%imax) )
             tmpq = Qn(this%half_explicit_s+1,:)
             B1 = this%half_explicit_B(tmpq)
             MBB0(this%sizev+1:this%sizev+this%sizel, 1:this%sizev) = matmul(B1,this%half_explicit_Tg(1.0_8, tmpt))
@@ -1012,6 +1013,9 @@ module half_explicit
             multi_factor = min(this%opts%facmax, max(this%opts%facmin, (this%opts%fac * ((1.0_8)/this%err)**((1.0_8)/(min(this%half_explicit_order,this%half_explicit_order_variable_step)+1.0_8)))))
             h_new = h_old * multi_factor
             
+            if (this%opts%update_a) then
+               this%opts%a_baumgarte = this%opts%a_baumgarte * (h_old/h_new)
+            end if
             t1 = this%t + h_new
             h_old = h_new
             if ( this%err .le. 1.0_8 ) then
