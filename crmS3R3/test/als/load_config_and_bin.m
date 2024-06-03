@@ -208,7 +208,14 @@ else
 end
 
 if strcmp(out.integrator,'half_explicit')
-    sizebin2 = out.stats.n_prints;
+    if (out.output_t_at == 1)
+        if not(out.t0 == 0.0)
+            error('output_t_at == 1, but not t0 == 0.0');
+        end
+        sizebin2 = floor(out.te/out.t_output_at_multiples_of) + 1;
+    else
+        sizebin2 = out.stats.n_prints;
+    end
 end
 
 

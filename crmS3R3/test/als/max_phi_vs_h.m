@@ -38,7 +38,7 @@ function max_phi_vs_h(sols,name)
         if isempty(k)
             parameter = [parameter the_par];
             plt{length(parameter)} = loglog(sols{i}.h, max(vecnorm(sols{i}.rslt.Phi)), 'o-', ...
-                'DisplayName', text, 'LineWidth', 1.5, 'Color', colors(mod(i,k)+1,:));
+                'DisplayName', text, 'LineWidth', 1.5, 'Color', colors(length(parameter),:));
         else
             plt{k}.XData = [plt{k}.XData sols{i}.h];
             plt{k}.YData = [plt{k}.YData max(vecnorm(sols{i}.rslt.Phi))];
@@ -46,13 +46,14 @@ function max_phi_vs_h(sols,name)
     end
 
     ax=gca;
-    ax.FontSize = 14;
+    ax.FontSize = 11;
     ax.PlotBoxAspectRatio = [1 1 1];
     set(gca, 'YScale', 'log', 'XScale', 'log')
 
-    title(['{\bf{Max constraint residual vs time step size}} $h$'],'FontSize',14,'Interpreter','latex')
+    title('Max constraint residual vs time step size $h$','FontSize',14,'Interpreter','latex')
     xlabel('Time step size ($h$)','FontSize',14,'Interpreter','latex')
     ylabel('$\max(\Vert{\bf{\Phi}}(q)\Vert_2)$','FontSize',14,'Interpreter','latex')
-    legend('Location','best','AutoUpdate','on','Interpreter','latex')
+    legend('Location','best','AutoUpdate','on','Interpreter','latex','FontSize',14)
     grid on
+    box on
 end
