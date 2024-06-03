@@ -61,16 +61,16 @@ k_bdf = 2
 -- Algorithmic paramters for half-explicit Lie Runge-Kutta
 
 -- [--[
-A = { 0.,  0.,
-     1/2,  0.,
-      0.,  1.}
-c = {0., 1/2, 1.}
-d = {0.,  1.}
-order  = 2
-stages = 2
-stages_bar = 2
-local_error_control = false
-step_size_control = false
+-- A = { 0.,  0.,
+--      1/2,  0.,
+--       0.,  1.}
+-- c = {0., 1/2, 1.}
+-- d = {0.,  1.}
+-- order  = 2
+-- stages = 2
+-- stages_bar = 2
+-- local_error_control = false
+-- step_size_control = false
 -- ||
 -- A = { 0.,  0.,
 --       1.,  0.,
@@ -155,24 +155,24 @@ step_size_control = false
 -- local_error_control = false
 -- step_size_control = false
 
--- -- Automatic step size control HEDOP5 (kirchhoff = 1 --> constrained)
--- A = {   0.,          0.,         0.,         0.,          0.,    0., 0.,
---        1/5,          0.,         0.,         0.,          0.,    0., 0.,
---       3/40,        9/40,         0.,         0.,          0.,    0., 0.,
---      44/45,      -56/15,       32/9,         0.,          0.,    0., 0.,
--- 19372/6561, -25360/2187, 64448/6561,   -212/729,          0.,    0., 0.,
---  9017/3168,     -355/33, 46732/5247,     49/176, -5103/18656,    0., 0.,
---     35/384,          0.,   500/1113,    125/192,  -2187/6784, 11/84, 0.,
---     -18611506045861/19738176307200, 59332529/14479296,   -2509441598627/893904224850,    2763523204159/3289696051200,  -41262869588913/116235927142400, 46310205821/287848404480, -3280/75413}
--- c = {0., 1/5, 3/10, 4/5, 8/9, 1., 1., 19/20}
--- b = {5179/57600, 0., 7571/16695, 393/640, -92097/339200, 187/2100, 1/40}
--- d = {0., 0., 0., 0., 0., 0., 1.}
--- order  = 5
--- order_step_control = 4
--- stages = 6
--- stages_bar = 7
--- local_error_control = false
--- step_size_control = false
+-- Automatic step size control HEDOP5 (kirchhoff = 1 --> constrained)
+A = {   0.,          0.,         0.,         0.,          0.,    0., 0.,
+       1/5,          0.,         0.,         0.,          0.,    0., 0.,
+      3/40,        9/40,         0.,         0.,          0.,    0., 0.,
+     44/45,      -56/15,       32/9,         0.,          0.,    0., 0.,
+19372/6561, -25360/2187, 64448/6561,   -212/729,          0.,    0., 0.,
+ 9017/3168,     -355/33, 46732/5247,     49/176, -5103/18656,    0., 0.,
+    35/384,          0.,   500/1113,    125/192,  -2187/6784, 11/84, 0.,
+    -18611506045861/19738176307200, 59332529/14479296,   -2509441598627/893904224850,    2763523204159/3289696051200,  -41262869588913/116235927142400, 46310205821/287848404480, -3280/75413}
+c = {0., 1/5, 3/10, 4/5, 8/9, 1., 1., 19/20}
+b = {5179/57600, 0., 7571/16695, 393/640, -92097/339200, 187/2100, 1/40}
+d = {0., 0., 0., 0., 0., 0., 1.}
+order  = 5
+order_step_control = 4
+stages = 6
+stages_bar = 7
+local_error_control = false
+step_size_control = true
 
 -- Use constant mass matrix
 const_mass_matrix = 1
@@ -195,29 +195,36 @@ no_K = 1
 no_D = 1
 
 -- Relative error bound for the Newton-Raphson method
-rtol = [[((tol)) 1.0e-6 ]]
+rtol = 1.0e-10
 -- Absolute error bound for the Newton-Raphson method
-atol = [[((tol)) 1.0e-8 ]]
+atol = 1.0e-12
 
 -- Integration interval and step size
 t0 = 0
 te = 10
-h  = 0.001
+h  = 0.0001
 -- steps = math.ceil((te-t0)*2^[--[ 7 || 8 || 9 || 10 || 11 || 12 || 18 ]])
 -- steps = 2^([--[ 5 || 6 || 7 || 8 || 9 ]])
 -- steps = math.ceil((te-t0)*2^10)
 steps = math.ceil((te-t0) * h^-1)
 
 -- Use stabilized index-2 formulation (only applies to the constrained case)
-stab2 = 0
+stab2 = 1
 -- Baumgarte parameter
-my_C = 0.
-update_a = false
-a_baumgarte = my_C / h
+my_C = 1.
+update_a = true
+a_baumgarte = my_C/h
 -- Use iterative projection
-stab_proj = 1
+stab_proj = 0
 -- Maximum unsuccessful iteration steps after which the method is considered not to converge
 imax = 1
+
+-- -- -- Output options -- -- --
+output_t_at = 0
+--t_output_at_multiples_of = 1/2^16
+t_output_at_multiples_of = 0.001
+output_s_at = 0
+output_s = { 0/8, 1/8, 2/8, 3/8, 4/8, 5/8, 6/8, 7/8, 8/8 }
 
 -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- --
 -- -- -- Problem options   -- -- -- -- -- -- -- -- -- -- -- --
@@ -358,10 +365,3 @@ fixed_p0 = 1
 fixed_p0_orientation = p0(0)
 fixed_pn = 0
 fixed_pn_orientation = p0(1)
-
--- -- -- Output options -- -- --
-output_t_at = 0
---t_output_at_multiples_of = 1/2^16
-t_output_at_multiples_of = 1/2^7
-output_s_at = 0
-output_s = { 0/8, 1/8, 2/8, 3/8, 4/8, 5/8, 6/8, 7/8, 8/8 }

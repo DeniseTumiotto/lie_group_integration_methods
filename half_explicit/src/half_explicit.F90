@@ -588,6 +588,8 @@ module half_explicit
          end if
       end do
 
+      i = this%half_explicit_s_bar + 1
+
       if ( this%opts%stab2 /= 0 .and. this%opts%stab_proj /= 0 ) then
          MBB0 = 0.0_8
          if (this%opts%diag_mass_matrix == 1) then
@@ -750,14 +752,22 @@ module half_explicit
 
          this%err = 0.0_8
          ! evaluate local error
-         do j = 1,this%sizeq+this%sizev
-            if (j < this%sizeq + 1) then
-               this%err = this%err + ((Qn(this%half_explicit_s+1,j)-Qn_local_error(j))/(this%opts%atol + max(abs(Qn(this%half_explicit_s+1,j)),abs(Qn(1,j))) * this%opts%rtol))**2
+         ! do j = 1,this%sizeq+this%sizev
+         !    if (j < this%sizeq + 1) then
+         !       this%err = this%err + ((Qn(this%half_explicit_s+1,j)-Qn_local_error(j))/(this%opts%atol + max(abs(Qn(this%half_explicit_s+1,j)),abs(Qn(1,j))) * this%opts%rtol))**2
+         !    else
+         !       this%err = this%err + ((Vn(this%half_explicit_s+1,j-this%sizeq)-Vn_local_error(j-this%sizeq))/(this%opts%atol + max(abs(Vn(this%half_explicit_s+1,j-this%sizeq)),abs(Vn(1,j-this%sizeq))) * this%opts%rtol))**2
+         !    end if
+         ! end do
+         ! this%err = sqrt(this%err / (this%sizeq + this%sizev))
+         do j = 1,this%sizev+this%sizev
+            if (j < this%sizev + 1) then
+               this%err = this%err + ((Thetan(this%half_explicit_s+1,j)-Thetan_local_error(j))/(this%opts%atol + max(abs(Thetan(this%half_explicit_s+1,j)),abs(Thetan(1,j))) * this%opts%rtol))**2
             else
-               this%err = this%err + ((Vn(this%half_explicit_s+1,j-this%sizeq)-Vn_local_error(j-this%sizeq))/(this%opts%atol + max(abs(Vn(this%half_explicit_s+1,j-this%sizeq)),abs(Vn(1,j-this%sizeq))) * this%opts%rtol))**2
+               this%err = this%err + ((Vn(this%half_explicit_s+1,j-this%sizev)-Vn_local_error(j-this%sizev))/(this%opts%atol + max(abs(Vn(this%half_explicit_s+1,j-this%sizev)),abs(Vn(1,j-this%sizev))) * this%opts%rtol))**2
             end if
          end do
-         this%err = sqrt(this%err / (this%sizeq + this%sizev))
+         this%err = sqrt(this%err / (this%sizev + this%sizev))
          if ( this%opts%step_size_control .and. (this%err > 1) ) then
             accepted_step = .false.
          elseif ( this%opts%step_size_control .and. (this%err .le. 1) ) then
