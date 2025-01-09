@@ -1,12 +1,12 @@
 # Half-explicit Runge-Kutta methods `half_explicit` for holonomic constrained systems on Lie group structured configuration spaces
 
-These are a time integration methods that can be used to solve differential algebraic equations on of the form
+These are a time integration methods that can be used to solve differential algebraic equations of the form
 
         ̇𝑞(𝑡) = d𝐿_𝑞(𝑒) ̃𝑣(𝑡)
     𝐌 ⋅ ̇𝑣(𝑡) = -𝑔(𝑡,𝑞,𝑣) - 𝐁ᵀ(𝑞(𝑡))⋅λ(𝑡)
            𝟎 = Φ(𝑞(𝑡))
 
-a Lie group 𝐺 of dimension 𝑛. Here 𝑞(𝑡)∈𝐺 is the configuration of the system and 𝑣(𝑡)∈ℝⁿ the associated velocity vectors. 𝐿 is the left translation and d𝐿 its derivative. We have the tilde operator which maps 𝑛-vectors to the Lie algebra of 𝐺. The 𝑛×𝑛-matrix 𝐌 is a constant mass matrix, 𝑔 is a function that gives the negative of all generalized forces including Coriolis (or inertial) forces. Moreover, Φ is the constraint function with Φ(𝑞)∈ℝᵏ and 𝐁 is its derivative in the sense
+on a Lie group 𝐺 of dimension 𝑛. Here 𝑞(𝑡)∈𝐺 is the configuration of the system and 𝑣(𝑡)∈ℝⁿ the associated velocity vectors. 𝐿 is the left translation and d𝐿 its derivative. We have the tilde operator which maps 𝑛-vectors to the Lie algebra of 𝐺. The 𝑛×𝑛-matrix 𝐌 is a constant mass matrix, 𝑔 is a function that gives the negative of all generalized forces including Coriolis (or inertial) forces. Moreover, Φ is the constraint function with Φ(𝑞)∈ℝᵏ and 𝐁 is its derivative in the sense
     𝐁(𝑞)⋅𝑤 = dΦ(𝑞) d𝐿_𝑞(𝑒) ̃𝑤  for all  𝑤∈ℝⁿ.
 Using the derivative operator 𝐃, we could also write in short 𝐁=𝐃Φ. Furthermore, λ(𝑡)∈ℝᵏ are the Lagrange multipliers.
 
@@ -39,6 +39,7 @@ Here is a list of all deferred procedures that must be implemented when extendin
  * `half_explicit_Kt`: This function should return the tangent stiffness matrix 𝐊 in the unconstrained case (ie. `prob%opts%constrained==0`). That means 𝐊 is the derivative wrt 𝑞 of the residual 𝐌⋅̇𝑣 + 𝑔(𝑡,𝑞,𝑣), so we have 𝐊=𝐃_𝑞(𝐌⋅̇𝑣 + 𝑔(𝑡,𝑞,𝑣)) or in other words: For all vectors 𝑤 it holds 𝐊⋅𝒘=d_𝑞(𝐌⋅̇𝑣 + 𝑔(𝑡,𝑞,𝑣)) d𝐿_𝑞(𝑒) ̃𝑤. Note that if the mass matrix 𝐌 is independent of 𝑞, 𝐊 is just the derivative of 𝑔 wrt. 𝑞. This function will never be called if `prob%opts%use_num_Ct==1` or `prob%opts%use_no_Ct==1` and also if `prob%opts%constrained==1`.
  * `half_explicit_Kt_lambda`: This function should return the tangent stiffness matrix 𝐊 in the constrained case (ie. `prob%opts%constrained==1`). That means 𝐊 is the derivative wrt 𝑞 of the residual 𝐌⋅̇𝑣 + 𝑔(𝑡,𝑞,𝑣) + 𝐁ᵀ(𝑞)⋅λ, so we have 𝐊=𝐃_𝑞(𝐌⋅̇𝑣 + 𝑔(𝑡,𝑞,𝑣) + 𝐁ᵀ(𝑞)⋅λ) or in other words: For all vectors 𝑤 it holds 𝐊⋅𝒘=d_𝑞(𝐌⋅̇𝑣 + 𝑔(𝑡,𝑞,𝑣) + 𝐁ᵀ(𝑞)⋅λ) d𝐿_𝑞(𝑒) ̃𝑤. Note that if the mass matrix 𝐌 might be independent of 𝑞. This function will never be called if `prob%opts%use_num_Ct==1` or `prob%opts%use_no_Ct==1` and also if `prob%opts%constrained==0`.
  * `half_explicit_Tg`: This functions should return the tangent operator 𝐓(ℎ⋅Δ𝑞). The tangent operator should be implemented in such a way that it works reliably, even if the norm of ℎ⋅Δ𝑞 is very small.
+ * `half_explicit_d_Tg_inv_T`: This function should return the Jacobi matrix of 𝐓⁻ᵀ(𝑣)⋅𝑤 with respect to 𝑣.
  * `half_explicit_norm`: This function may be a dummy function. It is only here for backwards compatibility. It may/should/will(?) be removed in the future.
  * `half_explicit_outputFunction`: Despite its name, this is not a function but rather a subroutine. It will be called after each successful integration step. Note, that all arguments are `intent(in)`, meaning that the problem object may not be altered. There are currently three possible values of `info`:
    * `info==0`: "Initialization": The `half_explicit_outputFunction` is called once after the problem was initialized (ie. after `half_explicit_init` was called and, in the constrained case, initial values for ̇𝑣, 𝑎 and λ were calculated.) Note that here, we should not open files, because there is no way of storing the identifier. Open files in `half_explicit_init` or before calling the integration routine.
@@ -70,6 +71,8 @@ Here is a list of all other integrator options in `prob%opts`:
 
  * `constrained`: Set this to `1` if the system is constrained, for unconstrained systems set this to `0`.
  * `stab2`: Only applies in the constrained case. Set this to `1`, if the stabilized index-2 formulation should be used. Set this to `0` in order to use the index-3 formulation. Note that the stabilized index-2 formulation is usually the better choice.
+ * `a_baumgarte`: Only applies in the constrained index-2 stabilized case. Set this `real(8)` variable to the value of the Baumgarte coefficient.
+ * `stab_proj`: Only applies in the constrained index-2 stabilized case. Set this to `1` if the stabilization is performed via projection of the solution on the submanifold generated by the constraints.
  * `const_mass_matrix`: Set this to `1` if the mass matrix 𝐌 does not depend on the configuration 𝑞. Set this to `0` if 𝐌 depends on 𝑞. Note that `half_explicit` was not tested with nonconstant mass matrices, results may not be accurate.
  * `diag_mass_matrix`: Set this to `1` if the mass matrix 𝐌 is a diagonal matrix. In this case `half_explicit_diag_M` will be used instead of `half_explicit_M`. Set this to `0` for full mass matrices.
  * `banded_iteration_matrix`: Set this to `1` if the iteration matrix has band structure or can be rearranged to a matrix with band structure. This is usually the case when integrating a system with several bodies that are chained but otherwise don't interact directly. Set this to `0` if the iteration matrix can be full.
@@ -80,7 +83,6 @@ Here is a list of all other integrator options in `prob%opts`:
    * Constrained index-3 case: `prob%sizev+prob%sizel`
    * Constrained stabilized index-2 case: `prob%sizev + 2*prob%sizel`
  * `pertube`: Only applies in the constrained index-3 case. Set this to `1` if the initial values should be perturbed in order to minimize spurious oscillations in the first integration steps. Set this to `0` if the initial values should not be perturbed. Note that these spurious oscillations do generally not appear in the stabilized index-2 case. Also, I'm sorry, but for compatibility reasons, this variable is misspelled.
- * `pertube_s`: This applies in all cases! This is a `real(8)` parameter that controls how much the initial step size is scaled in order to calculate the initial values for `prob%a` via finite differences. It is also used in the perturbing of the initial values in the constrained index-3 case. Usually, something in the realm of `1.0_8` is a good choice.
  * `use_num_Ct`: Set this to `1` if the tangent damping matrix should be calculated via finite differences. This is often slower and less accurate, but then `prob%half_explicit_Ct` is never called. Set this to `0` if the damping matrix should be calculated by `prob%half_explicit_Ct`.
  * `use_num_Kt`: Set this to `1` if the tangent stiffness matrix should be calculated via finite differences. This is often slower and less accurate, but then `prob%half_explicit_Kt` and `prob%half_explicit_Kt_lambda` is never called. Set this to `0` if the damping matrix should be calculated by `prob%half_explicit_Kt` or `prob%half_explicit_Kt_lambda`.
  * `no_Ct`: Set this to `1` if the tangent damping matrix should be completely omitted in the iteration matrix. Then, `half_explicit_Ct` is never called. This speeds up the integration a lot, but may lead to problems with convergence of the Newton method. Set this to `0` if the damping matrix should be included in the iteration matrix.
@@ -91,7 +93,13 @@ Here is a list of all other integrator options in `prob%opts`:
  * `t0`: Set this `real(8)` variable to the beginning of the time integration interval 𝑡₀. Don't forget to set `this%t = this%t0` in `half_explicit_init`.
  * `te`: Set this `real(8)` variable to the end of the time integration interval 𝑡ₑ.
  * `nsteps`: Set this variable to the number of integration steps (of equal length) to be made between 𝑡₀ and 𝑡ₑ. This means the step size can be calculated by ℎ=(𝑡ₑ-𝑡₀)/`nsteps`.
-
+ * `step_size_control`: Set this to `.true.` if the time step size should be controlled by the estimate of the local error.
+ * `local_error_control`: Set this to `.true.` if the local error estimate should be evaluated and saved in the output file.
+ * `update_a`: Set this to `.true.` if the Baumgarte coefficient needs to be updated together with the new time step size.
+ * `facmax`: Set this `real(8)` variable to the maximum factor in the evaluation of the new time step size, usually in the interval `1.5-5.0`.
+ * `facmin`: Set this `real(8)` variable to the minimum factor in the evaluation of the new time step size, default set to `0.1`.
+ * `fac`: Set this `real(8)` variable to the factor in the evaluation of the new time step size, usually `0.8, 0.9` or in dependance of the order of the numerical method.
+ 
 ### Compiler flags
 This project has been written for `gfortran` on Linux, although porting to code to different compilers or different platforms should not be too hard.
 The makefile of `half_explicit` will look for the variable `EXTRAFFLAGS` that is supposed to contain compiler flags. In order to make the variable `EXTRAFFLAGS` visible to the makefile, you should put `export EXTRAFFLAGS` in the problem makefile after defining it.
@@ -100,7 +108,7 @@ Here is a list of helpful compiler flags:
  * `-O`: Pass this flag to "optimize" the code. It will produce code that may run (a lot) faster. The optimization can be controlled in levels: `-O0` to turn it off completely, `-O1` and `-O3` exist, see `gfortran`s manual, and `-O2` is equivalent to `-O`.
  * `-Wall`: Turn on "all" warnings while compiling. Helpful for debugging.
  * `-Wextra`: Turn on even more warnings than "all". Helpful for debugging.
- * `-Dpure=''`: This defines the preprocessor variable `pure` to be the empty string. This will cause the Fortran keyword `pure` to be removed from the whole code, making all otherwise `pure` procedures non-`pure`. This is very helpful for debugging, because in a `pure` procedure, no side effects such as printing are allowed. (Exept right before `error stop`). _Note that this is black magic and probably everybody will tell you not to do such things in a program that should produce senisible output._
+ * `-Dpure=''`: This defines the preprocessor variable `pure` to be the empty string. This will cause the Fortran keyword `pure` to be removed from the whole code, making all otherwise `pure` procedures non-`pure`. This is very helpful for debugging, because in a `pure` procedure, no side effects such as printing are allowed. (Exept right before `error stop`). _Note that this is black magic and probably everybody will tell you not to do such things in a program that should produce sensible output._
  * `-g`: Turn on debug mode. Extremely helpful for debugging, obviously. Slows down the program on the other hand.
  * `-fbounds-check`: Check bounds of vectors and such. May help to discover errors.
  * `-fimplicit-none`: Automatically uses `implicit none` everywhere. Use only for debugging and be sure to write `implicit none` everywhere it belongs.
@@ -131,7 +139,7 @@ In order to implement a problem that should be integrated with `half_explicit` t
  
  * `problem.F90` which contains a module `problem` which used the module `half_explicit` and extends the abstract type `half_explicit_problem` to a non-abstract type.
  * `main.F90` which contains the `program main` and uses the module `problem` implemented in `problem.F90`.
- * `makefile` which contains recipies to compile and maybe run the program.
+ * `makefile` which contains recipes to compile and maybe run the program.
 
 The contents of these files could look like this:
 
