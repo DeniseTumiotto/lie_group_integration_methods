@@ -172,7 +172,7 @@ order_step_control = 4
 stages = 6
 stages_bar = 7
 local_error_control = false
-step_size_control = true
+step_size_control = false
 
 -- Use constant mass matrix
 const_mass_matrix = 1
@@ -202,17 +202,18 @@ atol = 1.0e-12
 -- Integration interval and step size
 t0 = 0
 te = 10
-h  = 0.0001
+-- h  = 10^(-3)
 -- steps = math.ceil((te-t0)*2^[--[ 7 || 8 || 9 || 10 || 11 || 12 || 18 ]])
--- steps = 2^([--[ 5 || 6 || 7 || 8 || 9 ]])
+steps = 2^([[ 12 || 13 || 14 ]])
 -- steps = math.ceil((te-t0)*2^10)
-steps = math.ceil((te-t0) * h^-1)
+-- steps = math.ceil((te-t0) * h^(-1))
+h = math.ceil((te-t0) * steps^(-1))
 
 -- Use stabilized index-2 formulation (only applies to the constrained case)
 stab2 = 1
 -- Baumgarte parameter
 my_C = 1.
-update_a = true
+update_a = false
 a_baumgarte = my_C/h
 -- Use iterative projection
 stab_proj = 0
