@@ -222,6 +222,8 @@ else
    out.rslt.finished = true;
 end
 
+disp(luafname); % DEBUG
+
 % % Load statistics from lua file
 % out.stats = readLua(luafname, ...
 %                     {'cpu_time',...

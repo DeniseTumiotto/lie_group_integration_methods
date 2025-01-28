@@ -27,6 +27,8 @@ end
 norm2 = @(x) sqrt(sum(x.^2,1)/size(x,1));
 abserr = @(x,xref) max(norm2(x(:,end)-xref(:,end)));
 relerr = @(x,xref) max(norm2(x(:,end)-xref(:,end))./norm2(xref(:,end)));
+abslog = @(x,xref) max(norm2([log_s3(qp(inv_s3sdr3(xref(1:4,end)),x(1:4,end))); T_inv(log_s3(qp(inv_s3sdr3(xref(1:4,end)),x(1:4,end)))).' * (x(5:7,end)-xref(5:7,end))]));
+rellog = @(x,xref) max(norm2([log_s3(qp(inv_s3sdr3(xref(1:4,end)),x(1:4,end))); T_inv(log_s3(qp(inv_s3sdr3(xref(1:4,end)),x(1:4,end)))).' * (x(5:7,end)-xref(5:7,end))])./norm2(xref(:,end)));
 
 % Refconfig
 refconfig = rmfield(ref, 'rslt');
@@ -57,7 +59,8 @@ for i=1:numel(solcell)
    else
       solcell{i}.err.refconfig = refconfig;
 
-      solcell{i}.err.abs.q  = abserr(solcell{i}.rslt.q, ref.rslt.q);
+      % solcell{i}.err.abs.q  = abserr(solcell{i}.rslt.q, ref.rslt.q);
+      solcell{i}.err.abs.q  = abslog(solcell{i}.rslt.q, ref.rslt.q);
       solcell{i}.err.abs.v  = abserr(solcell{i}.rslt.v, ref.rslt.v);
       if isfield('vd',solcell{i}.rslt)
           solcell{i}.err.abs.vd = abserr(solcell{i}.rslt.vd,ref.rslt.vd);
@@ -69,7 +72,8 @@ for i=1:numel(solcell)
          end
       end
 
-      solcell{i}.err.rel.q  = relerr(solcell{i}.rslt.q, ref.rslt.q);
+      % solcell{i}.err.rel.q  = relerr(solcell{i}.rslt.q, ref.rslt.q);
+      solcell{i}.err.rel.q  = rellog(solcell{i}.rslt.q, ref.rslt.q);
       solcell{i}.err.rel.v  = relerr(solcell{i}.rslt.v, ref.rslt.v);
       if isfield('vd',solcell{i}.rslt)
           solcell{i}.err.rel.vd = relerr(solcell{i}.rslt.vd,ref.rslt.vd);

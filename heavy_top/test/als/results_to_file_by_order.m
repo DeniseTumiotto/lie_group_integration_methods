@@ -24,7 +24,7 @@ function results_to_file_by_order(sols, xvalue, yvalues, filename)
     
     for i = 1:4
         if any(my_orders==i)
-            my_cell = [[{xvalue}, yvalues]; num2cell(squeeze(my_matrix(i,:,:)))];
+            my_cell = [[{xvalue}, yvalues]; num2cell(sortrows(squeeze(my_matrix(i,:,:)),1,'descend'))];
             writecell(my_cell, [filename,'_order_',num2str(i+1)], 'Delimiter', ' ')
         end
     end

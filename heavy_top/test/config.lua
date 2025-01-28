@@ -68,6 +68,8 @@ end
 -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- --
 -- -- -- Problem options   -- -- -- -- -- -- -- -- -- -- -- --
 -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- --
+-- Number of heavy tops
+number_heavy_tops = 1
 
 -- Mass of the top
 mass = 15
