@@ -12,7 +12,7 @@ function results_to_file_by_order(sols, xvalue, yvalues, filename)
             if j == 1
                 my_matrix(sols{i}.order-1,cnt_orders(my_orders(i)),j) = sols{i}.(xvalue);
             else
-                if eval(['sols{i}.' yvalues{j-1}]) == 0
+                if eval(['sols{i}.' yvalues{j-1}]) < eps
                     my_matrix(sols{i}.order-1,cnt_orders(my_orders(i)),j) = NaN;
                 else
                     my_matrix(sols{i}.order-1,cnt_orders(my_orders(i)),j) = eval(['sols{i}.' yvalues{j-1}]);

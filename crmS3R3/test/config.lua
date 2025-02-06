@@ -58,9 +58,8 @@ gamma   = 1/2 - (alpha_m - alpha_f)
 --Algorithmic parameters for BLieDF
 k_bdf = 2
 
--- Algorithmic paramters for half-explicit Lie Runge-Kutta
+-- Algorithmic parameters for half-explicit Lie Runge-Kutta
 
--- [--[
 -- A = { 0.,  0.,
 --      1/2,  0.,
 --       0.,  1.}
@@ -71,7 +70,7 @@ k_bdf = 2
 -- stages_bar = 2
 -- local_error_control = false
 -- step_size_control = false
--- ||
+-- |--|
 -- A = { 0.,  0.,
 --       1.,  0.,
 --      1/2, 1/2}
@@ -82,7 +81,7 @@ k_bdf = 2
 -- stages_bar = 2
 -- local_error_control = false
 -- step_size_control = false
--- ||
+
 -- A = { 0.,  0.,
 --       2.,  0.,
 --      3/4, 1/4}
@@ -93,7 +92,6 @@ k_bdf = 2
 -- stages_bar = 2
 -- local_error_control = false
 -- step_size_control = false
--- ]]
 
 -- A = { 0.,  0.,  0.,
 --      1/2,  0.,  0.,
@@ -202,15 +200,14 @@ atol = 1.0e-12
 -- Integration interval and step size
 t0 = 0
 te = 10
--- h  = 10^(-3)
--- steps = math.ceil((te-t0)*2^[--[ 7 || 8 || 9 || 10 || 11 || 12 || 18 ]])
-steps = 2^([[ 12 || 13 || 14 ]])
+-- h  = 10^(-6)
+steps = math.ceil((te-t0)*2^[[ -1 || 0 || 1 || 2 || 3 ]])
 -- steps = math.ceil((te-t0)*2^10)
 -- steps = math.ceil((te-t0) * h^(-1))
 h = math.ceil((te-t0) * steps^(-1))
 
 -- Use stabilized index-2 formulation (only applies to the constrained case)
-stab2 = 1
+stab2 = 0
 -- Baumgarte parameter
 my_C = 1.
 update_a = false
@@ -218,7 +215,7 @@ a_baumgarte = my_C/h
 -- Use iterative projection
 stab_proj = 0
 -- Maximum unsuccessful iteration steps after which the method is considered not to converge
-imax = 1
+imax = 0
 
 -- -- -- Output options -- -- --
 output_t_at = 0
@@ -260,12 +257,12 @@ n = 8
 L = 10
 
 -- Dissipative material constants
-CGamd = { 5.0e1,
-          5.0e1,
-          5.0e1 }
-CKd = { 5.0e1,
-        5.0e1,
-        5.0e1 }
+CGamd = { 1.0e2,
+          1.0e2,
+          1.0e2 }
+CKd = { 1.0e2,
+        1.0e2,
+        1.0e2 }
 -- Material properties
 -- CGam = [ GA, GA, EA ]
 CGam = { 1.0e4,

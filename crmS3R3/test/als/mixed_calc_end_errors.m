@@ -1,4 +1,4 @@
-function sols = mixed_calc_end_errors(sols)
+function sols = mixed_calc_end_errors(sols, refsol)
 
     if ~isfield(sols{1}, 'h')
         sols = create_h(sols);
@@ -32,10 +32,19 @@ function sols = mixed_calc_end_errors(sols)
 
     for i = 1:4
         if ~isempty(rll_index{i})
-            sols(rll_index{i}) = calc_end_errors(sols(rll_index{i}),sols{rll_ref{i,1}});
+            if nargin < 2 || i == 4
+                sols(rll_index{i}) = calc_end_errors(sols(rll_index{i}),sols{rll_ref{i,1}});
+            else
+                tmp_sols = calc_end_errors({sols{rll_index{i}},refsol},refsol);
+                sols(rll_index{i}) = tmp_sols(1:end-1);
+            end
         end
         if ~isempty(fly_index{i})
-            sols(fly_index{i}) = calc_end_errors(sols(fly_index{i}),sols{fly_ref{i,1}});
+            if nargin < 2
+                sols(fly_index{i}) = calc_end_errors(sols(fly_index{i}),sols{fly_ref{i,1}});
+            else
+                sols(fly_index{i}) = calc_end_errors(sols(fly_index{i}),refsol);
+            end
         end
     end
 end
