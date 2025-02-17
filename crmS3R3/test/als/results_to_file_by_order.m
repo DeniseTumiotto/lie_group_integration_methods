@@ -28,7 +28,4 @@ function results_to_file_by_order(sols, xvalue, yvalues, filename)
             writecell(my_cell, [filename,'_order_',num2str(i+1)], 'Delimiter', ' ')
         end
     end
-    
-    
-    
 end
