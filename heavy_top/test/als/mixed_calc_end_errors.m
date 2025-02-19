@@ -1,4 +1,4 @@
-function sols = mixed_calc_end_errors(sols)
+function sols = mixed_calc_end_errors(sols, refsol)
 
     if ~isfield(sols{1}, 'h')
         sols = create_h(sols);
@@ -54,16 +54,36 @@ function sols = mixed_calc_end_errors(sols)
 
     for i = 1:4
         if ~isempty(so3r3_index{i})
-            sols(so3r3_index{i}) = calc_errors(sols(so3r3_index{i}),sols{so3r3_ref{i,1}});
+            if nargin < 2 || i == 4
+                sols(so3r3_index{i}) = calc_errors(sols(so3r3_index{i}),sols{so3r3_ref{i,1}});
+            else
+                tmp_sols = calc_errors({sols{so3r3_index{i}},refsol},refsol);
+                sols(so3r3_index{i}) = tmp_sols(1:end-1);
+            end
         end
         if ~isempty(s3r3_index{i})
-            sols(s3r3_index{i}) = calc_errors(sols(s3r3_index{i}),sols{s3r3_ref{i,1}});
+            if nargin < 2 || i == 4
+                sols(s3r3_index{i}) = calc_errors(sols(s3r3_index{i}),sols{s3r3_ref{i,1}});
+            else
+                tmp_sols = calc_errors({sols{s3r3_index{i}},refsol},refsol);
+                sols(s3r3_index{i}) = tmp_sols(1:end-1);
+            end
         end
         if ~isempty(se3_index{i})
-            sols(se3_index{i}) = calc_errors(sols(se3_index{i}),sols{se3_ref{i,1}});
+            if nargin < 2 || i == 4
+                sols(se3_index{i}) = calc_errors(sols(se3_index{i}),sols{se3_ref{i,1}});
+            else
+                tmp_sols = calc_errors({sols{se3_index{i}},refsol},refsol);
+                sols(se3_index{i}) = tmp_sols(1:end-1);
+            end
         end
         if ~isempty(s3sdr3_index{i})
-            sols(s3sdr3_index{i}) = calc_errors(sols(s3sdr3_index{i}),sols{s3sdr3_ref{i,1}});
+            if nargin < 2 || i == 4
+                sols(s3sdr3_index{i}) = calc_errors(sols(s3sdr3_index{i}),sols{s3sdr3_ref{i,1}});
+            else
+                tmp_sols = calc_errors({sols{s3sdr3_index{i}},refsol},refsol);
+                sols(s3sdr3_index{i}) = tmp_sols(1:end-1);
+            end
         end
     end
 end

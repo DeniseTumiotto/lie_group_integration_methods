@@ -784,6 +784,10 @@ module half_explicit
          end do
          this%t = t1
       end if
+      
+      if ( this%opts%step_size_control .and. .not. accepted_step ) then
+         write(1,*) t1, h, this%err
+      end if
    end subroutine half_explicit_solveConstrainedTimeStep
 
    ! subroutine for integrating one time step
@@ -950,6 +954,7 @@ module half_explicit
       real(8)                          :: h_old
       real(8)                          :: t1 = 0.0_8 ! next time $t_{n+1}$
       real(4)                          :: times(2), time ! for dtime
+      character*10 title
 
       ! problem initialization
       call this%half_explicit_init()
@@ -987,6 +992,12 @@ module half_explicit
 
       ! start stopwatch
       time = dtime(times)
+      if (this%opts%step_size_control) then
+         ! ! output data into a file 
+         call date_and_time(TIME=title)
+         ! call fdate( title )
+         open(1, file = './out/'//title//'_time_h.txt', status = 'new')  
+      end if
 
       ! integration loop
       do while (t1 <= this%opts%te .or. n <= this%opts%nsteps)
@@ -1043,6 +1054,11 @@ module half_explicit
          end if
 
       end do
+
+      if (this%opts%step_size_control) then
+         ! ! output data into a file 
+         close(1)
+      end if
 
       ! stop stopwatch
       this%half_explicit_stats%time = dtime(times) - time

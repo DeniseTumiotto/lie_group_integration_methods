@@ -10,6 +10,15 @@ function out = structmatch(struct, pattern)
 
 fields = fieldnames(pattern);
 
+
+% DEBUG
+% if isfield(struct,'integrator')
+%     if strcmp(struct.integrator,'half_explicit') && struct.order ~= pattern.order
+%         out = false;
+%         return
+%     end
+% end
+
 for i=1:numel(fields)
    field = fields{i};
    val = pattern.(field);

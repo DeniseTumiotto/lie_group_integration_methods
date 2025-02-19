@@ -4,23 +4,23 @@ function solcell = calc_end_errors(solcell, refpattern, from)
 
 % Find reference solution
 %refsols = load_all_config_and_bin(refpattern);
-refsols = filter_solcell(solcell, refpattern);
-if numel(refsols) > 1
-   error('calc_errors:ambiguousReference',...
-         'Reference pattern matches more than one solution');
-end
+% refsols = filter_solcell(solcell, refpattern);
+% if numel(refsols) > 1
+%    error('calc_errors:ambiguousReference',...
+%          'Reference pattern matches more than one solution');
+% end
+% 
+% if numel(refsols) == 0
+%    error('calc_errors:noReference',...
+%          'Reference pattern does not match any solution');
+% end
+% ref = refsols{1};
 
-if numel(refsols) == 0
-   error('calc_errors:noReference',...
-         'Reference pattern does not match any solution');
-end
-ref = refsols{1};
-
+ref = refpattern;
 if ~ref.rslt.finished == 1
    error('calc_errors:refDidntFinish',...
          'Reference solution did not finish');
 end
-
 
 
 %
