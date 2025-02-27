@@ -169,8 +169,8 @@ order  = 5
 order_step_control = 4
 stages = 6
 stages_bar = 7
-local_error_control = true
-step_size_control = true
+local_error_control = false
+step_size_control = false
 
 -- Use constant mass matrix
 const_mass_matrix = 1
@@ -192,17 +192,17 @@ no_K = 1
 -- Omit damping matrix D in the iteration matrix
 no_D = 1
 -- Relative error bound for the Newton-Raphson method
-rtol = 1.0e-10
+rtol = 1.0e-6
 -- Absolute error bound for the Newton-Raphson method
-atol = 1.0e-12
+atol = 1.0e-8
 -- Integration interval and step size
 t0 = 0
 te = 10
--- h  = 10^(-6)
+-- h  = [--[ 10^(-4) || 2.5*10^(-4) || 5*10^(-4) || 7.5*10^(-4) || 10^(-3) ]]
 steps = math.ceil((te-t0)*2^10)
 -- steps = math.ceil((te-t0)*2^10)
 -- steps = math.ceil((te-t0) * h^(-1))
-h = math.ceil((te-t0) * steps^(-1))
+h = (te-t0) * steps^(-1)
 
 -- Use stabilized index-2 formulation (only applies to the constrained case)
 stab2 = 0
@@ -249,7 +249,6 @@ nr_subdiag = 11 + additional_subdiag
 nr_superdiag = nr_subdiag
 
 -- Number of discretization points minus one (since we have q_0,..,q_n)
--- n = 2^[--[ 2 || 3 || 4 || 5 || 6 ]]
 n = 16
 
 -- Length
