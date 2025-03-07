@@ -246,7 +246,7 @@ program main
    call aot_get_val(L = conf, key = 'stab2', val = prob%opts%stab2, ErrCode = iError)
    call error_check(conf, iError, 'stab2')
    print *, 'stab2 = ', prob%opts%stab2
-
+#ifdef INT_half_explicit
    call aot_get_val(L = conf, key = 'a_baumgarte', val = prob%opts%a_baumgarte, ErrCode = iError)
    call error_check(conf, iError, 'a_baumgarte')
    print *, 'a_baumgarte = ', prob%opts%a_baumgarte
@@ -254,7 +254,7 @@ program main
    call aot_get_val(L = conf, key = 'stab_proj', val = prob%opts%stab_proj, ErrCode = iError)
    call error_check(conf, iError, 'stab_proj')
    print *, 'stab_proj = ', prob%opts%stab_proj
-
+#endif
    ! Integration interval and step size
    call aot_get_val(L = conf, key = 't0', val = prob%opts%t0, ErrCode = iError)
    call error_check(conf, iError, 't0')
@@ -631,7 +631,9 @@ program main
    write (out_lua_lun, *) 'newt_steps_avg = ', prob%GL(INTEGRATOR)_stats%newt_steps_avg
    write (out_lua_lun, *) 'n_g_calls = ', prob%GL(INTEGRATOR)_stats%ngcalls
    write (out_lua_lun, *) 'n_B_calls = ', prob%GL(INTEGRATOR)_stats%nBcalls
+#ifdef INT_half_explicit
    write (out_lua_lun, *) 'n_prints = ', prob%GL(INTEGRATOR)_stats%n_prints
+#endif
 
    ! Clean up
    call prob%GL(INTEGRATOR)_cleanup()

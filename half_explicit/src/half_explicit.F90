@@ -439,7 +439,10 @@ module half_explicit
       real(8), dimension(this%sizev) :: tmpv
       real(8), dimension(this%sizev) :: tmpt
       real(8), dimension(this%sizel) :: tmpl
+      real(8), dimension(this%sizev) :: delta_proj
+      real(8), dimension(this%sizel) :: mu_proj
       real(8), dimension(this%sizev+this%sizel) :: residual
+      real(8), dimension(this%sizev+this%sizel) :: residual_old
       
       ! calculation of step size $h$
       h = t1 - this%t
@@ -591,6 +594,8 @@ module half_explicit
       i = this%half_explicit_s_bar + 1
 
       if ( this%opts%stab2 /= 0 .and. this%opts%stab_proj /= 0 ) then
+         delta_proj = 0.0_8
+         mu_proj    = 0.0_8
          MBB0 = 0.0_8
          if (this%opts%diag_mass_matrix == 1) then
             if (this%opts%const_mass_matrix == 1) then
@@ -613,11 +618,14 @@ module half_explicit
          tmpt = Thetan(this%half_explicit_s+1,:)
          B0 = this%half_explicit_B(this%q)
          B1 = this%half_explicit_B(tmpq)
+         ! B1 = this%half_explicit_B(this%q)
          MBB0(1:this%sizev, this%sizev+1:this%sizev+this%sizel) = transpose(B0)
          MBB0(this%sizev+1:this%sizev+this%sizel, 1:this%sizev) = matmul(B1,this%half_explicit_Tg(1.0_8, tmpt))
+         ! MBB0(this%sizev+1:this%sizev+this%sizel, 1:this%sizev) = B1
          ! right hand side
-         dVl(1:this%sizev) = 0.0_8
+         dVl(1:this%sizev) = - matmul(MBB0(1:this%sizev,1:this%sizev),delta_proj) - matmul(transpose(B0), mu_proj)
          dVl(this%sizev+1:this%sizev+this%sizel) = -this%half_explicit_phi(tmpq)
+         residual_old = dVl
          ! then solve the system
          call dgesv(                       &! solve the System A*X=B and save the result in B
                     this%sizev+this%sizel, &! number of linear equations (=size(A,1))      ! Vorsicht: double precision muss real(8) sein, sonst gibt es Probleme
@@ -629,18 +637,21 @@ module half_explicit
                     this%sizev+this%sizel, &! leading dimension of B,  in this case is equal to the number of linear equations (=size(B,1)=size(A,1))
                     info)                   ! integer information flag
                   ! if (info .ne. 0)  print*, "TimeStep--following steps: dgesv sagt info=", info ! TODO
+         delta_proj = delta_proj + dVl(1:this%sizev)
+         mu_proj    = mu_proj    + dVl(this%sizev+1:this%sizev+this%sizel)
          tmpt = tmpt + dVl(1:this%sizev)
          Qn(this%half_explicit_s+1,:) = this%half_explicit_qlpexphDqtilde(this%q, 1.0_8, tmpt)
          tmpq = Qn(this%half_explicit_s+1,:)
-         residual(1:this%sizev) = 0.0_8
+         residual(1:this%sizev) = - matmul(MBB0(1:this%sizev,1:this%sizev),delta_proj) - matmul(transpose(B0), mu_proj)
          residual(this%sizev+1:this%sizev+this%sizel) = -this%half_explicit_phi(tmpq)
          iter = 1
-         do while ( (norm2(residual) > this%opts%atol + this%opts%rtol * norm2(dVl)) .or. (iter <= this%opts%imax) )
+         do while ( (norm2(residual) > this%opts%atol + this%opts%rtol * norm2(residual_old)) .and. (iter < this%opts%imax) )
+            residual_old = residual
             tmpq = Qn(this%half_explicit_s+1,:)
             B1 = this%half_explicit_B(tmpq)
             MBB0(this%sizev+1:this%sizev+this%sizel, 1:this%sizev) = matmul(B1,this%half_explicit_Tg(1.0_8, tmpt))
             ! right hand side
-            dVl(1:this%sizev) = 0.0_8
+            dVl(1:this%sizev) = - matmul(MBB0(1:this%sizev,1:this%sizev),delta_proj) - matmul(transpose(B0), mu_proj)
             dVl(this%sizev+1:this%sizev+this%sizel) = -this%half_explicit_phi(tmpq)
             ! then solve the system
             call dgesv(                       &! solve the System A*X=B and save the result in B
@@ -653,10 +664,12 @@ module half_explicit
                        this%sizev+this%sizel, &! leading dimension of B,  in this case is equal to the number of linear equations (=size(B,1)=size(A,1))
                        info)                   ! integer information flag
                      ! if (info .ne. 0)  print*, "TimeStep--following steps: dgesv sagt info=", info ! TODO
+            delta_proj = delta_proj + dVl(1:this%sizev)
+            mu_proj    = mu_proj    + dVl(this%sizev+1:this%sizev+this%sizel)
             tmpt = tmpt + dVl(1:this%sizev)
             Qn(this%half_explicit_s+1,:) = this%half_explicit_qlpexphDqtilde(this%q, 1.0_8, tmpt)
             tmpq = Qn(this%half_explicit_s+1,:)
-            residual(1:this%sizev) = 0.0_8
+            residual(1:this%sizev) = - matmul(MBB0(1:this%sizev,1:this%sizev),delta_proj) - matmul(transpose(B0), mu_proj)
             residual(this%sizev+1:this%sizev+this%sizel) = -this%half_explicit_phi(tmpq)
             iter = iter + 1
          end do

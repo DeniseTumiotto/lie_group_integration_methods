@@ -71,18 +71,18 @@ k_bdf = 2
 -- local_error_control = false
 -- step_size_control = false
 -- |--|
--- A = { 0.,  0.,
---       1.,  0.,
---      1/2, 1/2}
--- c = {0., 1., 1.}
--- d = {1/2, 1/2}
--- b = {0., 1.}
--- order = 2
--- order_step_control = 1
--- stages = 2
--- stages_bar = 2
--- local_error_control = false
--- step_size_control = false
+A = { 0.,  0.,
+      1.,  0.,
+     1/2, 1/2}
+c = {0., 1., 1.}
+d = {1/2, 1/2}
+b = {0., 1.}
+order = 2
+order_step_control = 1
+stages = 2
+stages_bar = 2
+local_error_control = false
+step_size_control = false
 
 -- A = { 0.,  0.,
 --       2.,  0.,
@@ -155,24 +155,24 @@ k_bdf = 2
 -- local_error_control = false
 -- step_size_control = false
 
--- Automatic step size control HEDOP5 (kirchhoff = 1 --> constrained)
-A = {   0.,          0.,         0.,         0.,          0.,    0., 0.,
-       1/5,          0.,         0.,         0.,          0.,    0., 0.,
-      3/40,        9/40,         0.,         0.,          0.,    0., 0.,
-     44/45,      -56/15,       32/9,         0.,          0.,    0., 0.,
-19372/6561, -25360/2187, 64448/6561,   -212/729,          0.,    0., 0.,
- 9017/3168,     -355/33, 46732/5247,     49/176, -5103/18656,    0., 0.,
-    35/384,          0.,   500/1113,    125/192,  -2187/6784, 11/84, 0.,
-    -18611506045861/19738176307200, 59332529/14479296,   -2509441598627/893904224850,    2763523204159/3289696051200,  -41262869588913/116235927142400, 46310205821/287848404480, -3280/75413}
-c = {0., 1/5, 3/10, 4/5, 8/9, 1., 1., 19/20}
-b = {5179/57600, 0., 7571/16695, 393/640, -92097/339200, 187/2100, 1/40}
-d = {0., 0., 0., 0., 0., 0., 1.}
-order  = 5
-order_step_control = 4
-stages = 6
-stages_bar = 7
-local_error_control = true
-step_size_control = true
+-- -- Automatic step size control HEDOP5 (kirchhoff = 1 --> constrained)
+-- A = {   0.,          0.,         0.,         0.,          0.,    0., 0.,
+--        1/5,          0.,         0.,         0.,          0.,    0., 0.,
+--       3/40,        9/40,         0.,         0.,          0.,    0., 0.,
+--      44/45,      -56/15,       32/9,         0.,          0.,    0., 0.,
+-- 19372/6561, -25360/2187, 64448/6561,   -212/729,          0.,    0., 0.,
+--  9017/3168,     -355/33, 46732/5247,     49/176, -5103/18656,    0., 0.,
+--     35/384,          0.,   500/1113,    125/192,  -2187/6784, 11/84, 0.,
+--     -18611506045861/19738176307200, 59332529/14479296,   -2509441598627/893904224850,    2763523204159/3289696051200,  -41262869588913/116235927142400, 46310205821/287848404480, -3280/75413}
+-- c = {0., 1/5, 3/10, 4/5, 8/9, 1., 1., 19/20}
+-- b = {5179/57600, 0., 7571/16695, 393/640, -92097/339200, 187/2100, 1/40}
+-- d = {0., 0., 0., 0., 0., 0., 1.}
+-- order  = 5
+-- order_step_control = 4
+-- stages = 6
+-- stages_bar = 7
+-- local_error_control = false
+-- step_size_control = false
 
 -- Use constant mass matrix
 const_mass_matrix = 1
@@ -183,7 +183,7 @@ banded_iteration_matrix = 1
 -- Recalculate the iteration matrix in ever Newton step
 recalc_iteration_matrix = 0
 -- Perturb initial values (only applies to the constrained case with direct integration of the index-3 formulation)
-perturb   = 1
+perturb   = 0
 perturb_s = 1.0
 -- Use numerical approximation for stiffness matrix K
 use_num_K = 1
@@ -212,14 +212,14 @@ h = (te-t0) * steps^(-1)
 -- Use stabilized index-2 formulation (only applies to the constrained case)
 stab2 = 0
 -- Baumgarte parameter
-my_C = 1.
+my_C = 0.
 update_a = false
 a_baumgarte = my_C/h
 -- a_baumgarte = 1000
 -- Use iterative projection
-stab_proj = 0
+stab_proj = 1
 -- Maximum unsuccessful iteration steps after which the method is considered not to converge
-imax = 0
+imax = 10
 
 -- -- -- Output options -- -- --
 output_t_at = 0
